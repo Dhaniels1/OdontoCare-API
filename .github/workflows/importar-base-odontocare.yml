@@ -1,0 +1,45 @@
+name: Importar base OdontoCare
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - .github/workflows/importar-base-odontocare.yml
+
+permissions:
+  contents: write
+
+jobs:
+  importar:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout do repositorio pessoal
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+
+      - name: Importar arquivos da versao enviada
+        shell: bash
+        run: |
+          set -euo pipefail
+          git clone --quiet https://github.com/Bruna-ap/OdontoCare-API.git /tmp/odontocare-origem
+          git -C /tmp/odontocare-origem checkout --quiet 49e19e81360bfa646d0fd6e01b03e4adf1786dc9
+          rsync -a --exclude='.git/' --exclude='/OdontoCare-main/BancodeDados.sql/odontocare.sql' /tmp/odontocare-origem/ .
+          rm -f .github/workflows/importar-base-odontocare.yml
+          cat > IMPORTACAO.md <<'EOF'
+          # Origem do codigo
+
+          Esta base foi importada a partir do ZIP OdontoCare-API-main.zip, correspondente
+          ao commit 49e19e81360bfa646d0fd6e01b03e4adf1786dc9 do repositorio
+          Bruna-ap/OdontoCare-API.
+
+          O dump `OdontoCare-main/BancodeDados.sql/odontocare.sql` foi excluido da
+          publicacao porque continha CPFs, enderecos, dados clinicos e senhas de exemplo
+          em texto puro. O esquema sem registros pessoais continua disponivel em
+          `database/odontocare.sql`.
+          EOF
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -A
+          git diff --cached --quiet || git commit -m "feat: importar codigo inicial OdontoCare sem dados sensiveis"
+          git push origin HEAD:main
