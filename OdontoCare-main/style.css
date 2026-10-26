@@ -1,0 +1,67 @@
+body {
+    background: #f4f8fb !important;
+    font-family: Arial, Helvetica, sans-serif;
+}
+
+.navbar {
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.12);
+}
+
+.navbar-brand {
+    font-weight: 700;
+}
+
+.container {
+    max-width: 1180px;
+}
+
+.card {
+    border: none !important;
+    border-radius: 18px !important;
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.08) !important;
+}
+
+.card:hover {
+    transform: translateY(-3px);
+    transition: 0.25s;
+}
+
+.table {
+    background: #fff;
+    border-radius: 12px;
+    overflow: hidden;
+}
+
+.table th {
+    background: #eaf2ff !important;
+    color: #0d3b66;
+    font-weight: 700;
+}
+
+.btn {
+    border-radius: 20px;
+    font-weight: 600;
+}
+
+.form-control,
+.form-select {
+    border-radius: 12px;
+    padding: 10px 14px;
+}
+
+h1, h2, h3, h4 {
+    font-weight: 700;
+}
+
+.alert {
+    border-radius: 14px;
+}
+
+.badge {
+    padding: 7px 10px;
+    border-radius: 10px;
+}
+
+footer {
+    font-size: 14px;
+}

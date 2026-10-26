@@ -1,0 +1,6 @@
+<Solution>
+  <Project Path="OdontoCare.API/OdontoCare.API.csproj" />
+  <Project Path="OdontoCare.Application/OdontoCare.Application.csproj" />
+  <Project Path="OdontoCare.Domain/OdontoCare.Domain.csproj" />
+  <Project Path="OdontoCare.Infrastructure/OdontoCare.Infrastructure.csproj" />
+</Solution>
