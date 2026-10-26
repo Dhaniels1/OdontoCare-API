@@ -14,4 +14,5 @@ public interface IConsultaService
     Task<bool> AtualizarAsync(int id, Consulta consulta);
 
     Task<bool> ExcluirAsync(int id);
+    Task<bool> CancelarAsync(int id);
 }

@@ -39,4 +39,9 @@ public class PacienteCreateDto
     public string? Estado { get; set; }
 
     public DateTime? DataNascimento { get; set; }
+    public string? HistoricoOdontologico { get; set; }
+    public string? Alergias { get; set; }
+    public string? Exames { get; set; }
+    public string? TratamentosAnteriores { get; set; }
+    public string? ProntuarioClinicoDigital { get; set; }
 }

@@ -1,90 +1,43 @@
 <?php
-
-include_once __DIR__ . "/../config/conexao.php";
-include_once __DIR__ . "/../model/usuario.php";
-
-class UsuarioDao{
-
-    public function create(Usuario $usuario){
-
-        $sql = conexao::conectar()->prepare("
-            INSERT INTO usuario
-            (nome,email,login,senha,tipoUsuario)
-            VALUES
-            (?,?,?,?,?)
-        ");
-
-        $sql->bindValue(1,$usuario->__get("nome"));
-        $sql->bindValue(2,$usuario->__get("email"));
-        $sql->bindValue(3,$usuario->__get("login"));
-        $sql->bindValue(4,$usuario->__get("senha"));
-        $sql->bindValue(5,$usuario->__get("tipoUsuario"));
-
-        return $sql->execute();
+require_once __DIR__ . '/../api/ApiClient.php';
+class UsuarioDao
+{
+    private static function payload(Usuario $u, bool $novo): array
+    {
+        $body = [
+            'nome' => trim((string)$u->nome), 'email' => (string)$u->email,
+            'login' => trim((string)$u->login), 'tipoUsuario' => (string)$u->tipoUsuario
+        ];
+        if ($novo || trim((string)$u->senha) !== '') $body['senha'] = (string)$u->senha;
+        return $body;
     }
-
-    public function read(){
-
-        $sql=conexao::conectar()->prepare("
-            SELECT *
-            FROM usuario
-            ORDER BY nome
-        ");
-
-        $sql->execute();
-
-        return $sql->fetchAll(PDO::FETCH_ASSOC);
+    public function read(): array
+    {
+        $r = ApiClient::requisitar('GET','api/usuarios');
+        if (!$r['sucesso']) { $_SESSION['erro'] = $r['mensagem']; return []; }
+        return $r['dados'];
     }
-
-    public function readId($id){
-
-        $sql=conexao::conectar()->prepare("
-            SELECT *
-            FROM usuario
-            WHERE idUsuario=?
-        ");
-
-        $sql->bindValue(1,$id);
-
-        $sql->execute();
-
-        return $sql->fetch(PDO::FETCH_ASSOC);
+    public function readId($id): array|false
+    {
+        $r = ApiClient::requisitar('GET','api/usuarios/' . intval($id));
+        return $r['sucesso'] ? $r['dados'] : false;
     }
-
-    public function update(Usuario $usuario){
-
-        $sql=conexao::conectar()->prepare("
-            UPDATE usuario SET
-
-            nome=?,
-            email=?,
-            login=?,
-            senha=?,
-            tipoUsuario=?
-
-            WHERE idUsuario=?
-        ");
-
-        $sql->bindValue(1,$usuario->__get("nome"));
-        $sql->bindValue(2,$usuario->__get("email"));
-        $sql->bindValue(3,$usuario->__get("login"));
-        $sql->bindValue(4,$usuario->__get("senha"));
-        $sql->bindValue(5,$usuario->__get("tipoUsuario"));
-        $sql->bindValue(6,$usuario->__get("idUsuario"));
-
-        return $sql->execute();
+    public function create(Usuario $u): bool
+    {
+        $r = ApiClient::requisitar('POST','api/auth/registro',self::payload($u, true));
+        if (!$r['sucesso']) $_SESSION['erro'] = $r['mensagem'];
+        return $r['sucesso'];
     }
-
-    public function delete($id){
-
-        $sql=conexao::conectar()->prepare("
-            DELETE FROM usuario
-            WHERE idUsuario=?
-        ");
-
-        $sql->bindValue(1,$id);
-
-        return $sql->execute();
+    public function update(Usuario $u): bool
+    {
+        $r = ApiClient::requisitar('PUT','api/usuarios/' . intval($u->idUsuario),self::payload($u, false));
+        if (!$r['sucesso']) $_SESSION['erro'] = $r['mensagem'];
+        return $r['sucesso'];
     }
-
+    public function delete($id): bool
+    {
+        $r = ApiClient::requisitar('DELETE','api/usuarios/' . intval($id));
+        if (!$r['sucesso']) $_SESSION['erro'] = $r['mensagem'];
+        return $r['sucesso'];
+    }
 }

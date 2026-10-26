@@ -1,95 +1,51 @@
 <?php
-
+require_once __DIR__ . '/../api/ConsultaApi.php';
 class ConsultaDao
 {
-    public function create(Consulta $consulta)
+    private ConsultaApi $api;
+    public function __construct() { $this->api = new ConsultaApi(); }
+    private function payload(Consulta $c): array
     {
-        try {
-            $pdo = conexao::conectar();
-
-            $sql = "INSERT INTO consulta
-            (
-                dataConsulta,
-                horarioConsulta,
-                statusConsulta,
-                observacoes,
-                idUsuario,
-                idPaciente,
-                idProcedimento
-            )
-            VALUES
-            (?,?,?,?,?,?,?)";
-
-            $query = $pdo->prepare($sql);
-
-            $query->execute([
-                $consulta->dataConsulta,
-                $consulta->horarioConsulta,
-                $consulta->statusConsulta,
-                $consulta->observacoes,
-                $consulta->idUsuario,
-                $consulta->idPaciente,
-                $consulta->idProcedimento
-            ]);
-
-            conexao::desconectar();
-            return true;
-
-        } catch (PDOException $exception) {
-            die("Erro ao cadastrar consulta: " . $exception->getMessage());
-        }
+        return [
+            'dataConsulta' => substr((string)$c->dataConsulta, 0, 10),
+            'horarioConsulta' => (string)$c->horarioConsulta,
+            'statusConsulta' => (string)$c->statusConsulta,
+            'observacoes' => (string)$c->observacoes,
+            'idUsuario' => (int)$c->idUsuario,
+            'idPaciente' => (int)$c->idPaciente,
+            'idProcedimento' => (int)$c->idProcedimento
+        ];
     }
-
-    public function read()
+    public function create(Consulta $c): bool
     {
-        try {
-            $pdo = conexao::conectar();
-
-            $sql = "SELECT 
-                        c.idConsulta,
-                        c.dataConsulta,
-                        c.horarioConsulta,
-                        c.statusConsulta,
-                        c.observacoes,
-                        u.nome AS nomeUsuario,
-                        p.nome AS nomePaciente,
-                        pr.nomeProcedimento
-                    FROM consulta c
-                    INNER JOIN usuario u ON c.idUsuario = u.idUsuario
-                    INNER JOIN paciente p ON c.idPaciente = p.idPaciente
-                    INNER JOIN procedimento pr ON c.idProcedimento = pr.idProcedimento
-                    ORDER BY c.dataConsulta, c.horarioConsulta";
-
-            $resultado = $pdo->query($sql);
-
-            $lista = [];
-
-            foreach ($resultado as $linha) {
-                $lista[] = $linha;
-            }
-
-            conexao::desconectar();
-            return $lista;
-
-        } catch (PDOException $exception) {
-            die("Erro ao listar consultas: " . $exception->getMessage());
-        }
+        $r = $this->api->gravar(null, $this->payload($c));
+        if (!$r['sucesso']) $_SESSION['erro'] = $r['mensagem'];
+        return $r['sucesso'];
     }
-
-    public function delete($id)
+    public function read(): array
     {
-        try {
-            $pdo = conexao::conectar();
-
-            $sql = "DELETE FROM consulta WHERE idConsulta = ?";
-            $query = $pdo->prepare($sql);
-            $query->execute([$id]);
-
-            conexao::desconectar();
-            return true;
-
-        } catch (PDOException $exception) {
-            die("Erro ao excluir consulta: " . $exception->getMessage());
-        }
+        $r = $this->api->listar();
+        if (!$r['sucesso']) { $_SESSION['erro'] = $r['mensagem']; return []; }
+        return $r['dados'];
+    }
+    public function readId($id): array|false
+    {
+        $r = $this->api->buscar($id);
+        if (!$r['sucesso']) return false;
+        $dados = $r['dados'];
+        if (!empty($dados['dataConsulta'])) $dados['dataConsulta'] = substr($dados['dataConsulta'], 0, 10);
+        return $dados;
+    }
+    public function update(Consulta $c): bool
+    {
+        $r = $this->api->gravar($c->idConsulta, $this->payload($c));
+        if (!$r['sucesso']) $_SESSION['erro'] = $r['mensagem'];
+        return $r['sucesso'];
+    }
+    public function delete($id): bool
+    {
+        $r = $this->api->excluir($id);
+        if (!$r['sucesso']) $_SESSION['erro'] = $r['mensagem'];
+        return $r['sucesso'];
     }
 }

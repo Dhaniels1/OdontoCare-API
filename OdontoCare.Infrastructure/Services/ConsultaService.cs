@@ -1,5 +1,6 @@
 
 using Microsoft.EntityFrameworkCore;
+using OdontoCare.Application.Common;
 using OdontoCare.Application.Interfaces;
 using OdontoCare.Domain.Entities;
 using OdontoCare.Infrastructure.Data;
@@ -10,10 +11,12 @@ namespace OdontoCare.Infrastructure.Services;
 public class ConsultaService : IConsultaService
 {
     private readonly OdontoCareDbContext _context;
+    private readonly Microsoft.Extensions.Configuration.IConfiguration _config;
 
-    public ConsultaService(OdontoCareDbContext context)
+    public ConsultaService(OdontoCareDbContext context, Microsoft.Extensions.Configuration.IConfiguration config)
     {
         _context = context;
+        _config = config;
     }
 
     public async Task<List<Consulta>> GetTodasAsync()
@@ -33,6 +36,7 @@ public class ConsultaService : IConsultaService
     public async Task<Consulta> CriarAsync(Consulta consulta)
     {
         await ValidarRelacionamentosAsync(consulta);
+        await ValidarDisponibilidadeAsync(consulta, null);
 
         _context.Consultas.Add(consulta);
         await _context.SaveChangesAsync();
@@ -49,6 +53,7 @@ public class ConsultaService : IConsultaService
             return false;
 
         await ValidarRelacionamentosAsync(dados);
+        await ValidarDisponibilidadeAsync(dados, id);
 
         consulta.DataConsulta = dados.DataConsulta;
         consulta.HorarioConsulta = dados.HorarioConsulta;
@@ -71,10 +76,30 @@ public class ConsultaService : IConsultaService
         if (consulta == null)
             return false;
 
-        _context.Consultas.Remove(consulta);
+        consulta.StatusConsulta = "Cancelada";
         await _context.SaveChangesAsync();
-
         return true;
+    }
+
+    public Task<bool> CancelarAsync(int id) => ExcluirAsync(id);
+
+    private async Task ValidarDisponibilidadeAsync(Consulta consulta, int? ignorarId)
+    {
+        if (consulta.DataConsulta == default || consulta.HorarioConsulta < TimeSpan.Zero || consulta.HorarioConsulta >= TimeSpan.FromDays(1))
+            throw new BusinessException("Data ou horário inválido.");
+        var inicioTexto = _config["Clinica:HorarioInicio"];
+        var fimTexto = _config["Clinica:HorarioFim"];
+        if (!TimeSpan.TryParse(inicioTexto, out var inicio) || !TimeSpan.TryParse(fimTexto, out var fim) || inicio >= fim)
+            throw new BusinessException("Horário da clínica não configurado corretamente.");
+        if (consulta.HorarioConsulta < inicio || consulta.HorarioConsulta >= fim)
+            throw new BusinessException("Agendamento fora do horário de funcionamento configurado.");
+        var existe = await _context.Consultas.AnyAsync(c =>
+            (!ignorarId.HasValue || c.IdConsulta != ignorarId.Value) &&
+            c.DataConsulta.Date == consulta.DataConsulta.Date &&
+            c.HorarioConsulta == consulta.HorarioConsulta &&
+            c.StatusConsulta != "Cancelada" &&
+            (c.IdUsuario == consulta.IdUsuario || c.IdPaciente == consulta.IdPaciente));
+        if (existe) throw new BusinessException("Paciente ou profissional já possui consulta neste horário.");
     }
 
     private async Task ValidarRelacionamentosAsync(Consulta consulta)
@@ -83,21 +108,21 @@ public class ConsultaService : IConsultaService
             .AnyAsync(p => p.IdPaciente == consulta.IdPaciente);
 
         if (!pacienteExiste)
-            throw new InvalidOperationException(
+            throw new BusinessException(
                 "O paciente informado não existe.");
 
         var usuarioExiste = await RegistroExisteAsync(
             "usuario", "idUsuario", consulta.IdUsuario);
 
         if (!usuarioExiste)
-            throw new InvalidOperationException(
+            throw new BusinessException(
                 "O usuário informado não existe.");
 
         var procedimentoExiste = await RegistroExisteAsync(
             "procedimento", "idProcedimento", consulta.IdProcedimento);
 
         if (!procedimentoExiste)
-            throw new InvalidOperationException(
+            throw new BusinessException(
                 "O procedimento informado não existe.");
     }
 

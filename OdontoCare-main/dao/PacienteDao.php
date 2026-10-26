@@ -1,190 +1,47 @@
 <?php
-
+require_once __DIR__ . '/../api/PacienteApi.php';
 class PacienteDao
 {
-    public function create(Paciente $paciente)
+    private PacienteApi $api;
+    public function __construct() { $this->api = new PacienteApi(); }
+    private function payload(Paciente $p): array
     {
-        try {
-            $pdo = conexao::conectar();
-
-            $sql = "INSERT INTO paciente
-            (
-                nome,
-                cpf,
-                telefone,
-                email,
-                cep,
-                logradouro,
-                numero,
-                bairro,
-                cidade,
-                estado,
-                dataNascimento,
-                historicoOdontologico,
-                alergias,
-                exames,
-                tratamentosAnteriores,
-                prontuarioClinicoDigital
-            )
-            VALUES
-            (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
-
-            $query = $pdo->prepare($sql);
-
-            $query->execute([
-                $paciente->nome,
-                $paciente->cpf,
-                $paciente->telefone,
-                $paciente->email,
-                $paciente->cep,
-                $paciente->logradouro,
-                $paciente->numero,
-                $paciente->bairro,
-                $paciente->cidade,
-                $paciente->estado,
-                $paciente->dataNascimento,
-                $paciente->historicoOdontologico,
-                $paciente->alergias,
-                $paciente->exames,
-                $paciente->tratamentosAnteriores,
-                $paciente->prontuarioClinicoDigital
-            ]);
-
-            conexao::desconectar();
-            return true;
-
-        } catch (PDOException $exception) {
-            die("Erro ao cadastrar: " . $exception->getMessage());
-        }
+        $keys = ['nome','cpf','telefone','email','cep','logradouro','numero','bairro','cidade','estado',
+            'dataNascimento','historicoOdontologico','alergias','exames','tratamentosAnteriores','prontuarioClinicoDigital'];
+        $d = [];
+        foreach ($keys as $key) $d[$key] = (string)($p->$key ?? '');
+        return $d;
     }
-
-    public function read()
+    public function create(Paciente $p): bool
     {
-        try {
-            $pdo = conexao::conectar();
-
-            $sql = "SELECT * FROM paciente ORDER BY nome";
-            $resultado = $pdo->query($sql);
-
-            $lista = [];
-
-            foreach ($resultado as $linha) {
-                $lista[] = new Paciente(
-                    $linha["idPaciente"],
-                    $linha["nome"],
-                    $linha["cpf"],
-                    $linha["telefone"],
-                    $linha["email"],
-                    $linha["cep"],
-                    $linha["logradouro"],
-                    $linha["numero"],
-                    $linha["bairro"],
-                    $linha["cidade"],
-                    $linha["estado"],
-                    $linha["dataNascimento"],
-                    $linha["historicoOdontologico"],
-                    $linha["alergias"],
-                    $linha["exames"],
-                    $linha["tratamentosAnteriores"],
-                    $linha["prontuarioClinicoDigital"]
-                );
-            }
-
-            conexao::desconectar();
-            return $lista;
-
-        } catch (PDOException $exception) {
-            die("Erro ao listar pacientes: " . $exception->getMessage());
-        }
+        $r = $this->api->gravar(null, $this->payload($p));
+        $_SESSION['erro'] = $r['sucesso'] ? null : $r['mensagem'];
+        return $r['sucesso'];
     }
-
-    public function readId($id)
+    public function read(): array
     {
-        try {
-            $pdo = conexao::conectar();
-
-            $sql = "SELECT * FROM paciente WHERE idPaciente = ?";
-            $query = $pdo->prepare($sql);
-            $query->execute([$id]);
-
-            $dados = $query->fetch(PDO::FETCH_ASSOC);
-
-            conexao::desconectar();
-            return $dados;
-
-        } catch (PDOException $exception) {
-            die("Erro ao buscar paciente: " . $exception->getMessage());
-        }
+        $r = $this->api->listar();
+        if (!$r['sucesso']) { $_SESSION['erro'] = $r['mensagem']; return []; }
+        return array_map(static fn($p) => (object)$p, $r['dados']);
     }
-
-    public function update(Paciente $paciente)
+    public function readId($id): array|false
     {
-        try {
-            $pdo = conexao::conectar();
-
-            $sql = "UPDATE paciente SET
-                        nome = ?,
-                        cpf = ?,
-                        telefone = ?,
-                        email = ?,
-                        cep = ?,
-                        logradouro = ?,
-                        numero = ?,
-                        bairro = ?,
-                        cidade = ?,
-                        estado = ?,
-                        dataNascimento = ?,
-                        historicoOdontologico = ?,
-                        alergias = ?,
-                        exames = ?,
-                        tratamentosAnteriores = ?,
-                        prontuarioClinicoDigital = ?
-                    WHERE idPaciente = ?";
-
-            $query = $pdo->prepare($sql);
-
-            $query->execute([
-                $paciente->nome,
-                $paciente->cpf,
-                $paciente->telefone,
-                $paciente->email,
-                $paciente->cep,
-                $paciente->logradouro,
-                $paciente->numero,
-                $paciente->bairro,
-                $paciente->cidade,
-                $paciente->estado,
-                $paciente->dataNascimento,
-                $paciente->historicoOdontologico,
-                $paciente->alergias,
-                $paciente->exames,
-                $paciente->tratamentosAnteriores,
-                $paciente->prontuarioClinicoDigital,
-                $paciente->idPaciente
-            ]);
-
-            conexao::desconectar();
-            return true;
-
-        } catch (PDOException $exception) {
-            die("Erro ao alterar: " . $exception->getMessage());
-        }
+        $r = $this->api->buscar($id);
+        if (!$r['sucesso']) return false;
+        $dados = $r['dados'];
+        if (!empty($dados['dataNascimento'])) $dados['dataNascimento'] = substr($dados['dataNascimento'], 0, 10);
+        return $dados;
     }
-
-    public function delete($id)
+    public function update(Paciente $p): bool
     {
-        try {
-            $pdo = conexao::conectar();
-
-            $sql = "DELETE FROM paciente WHERE idPaciente = ?";
-            $query = $pdo->prepare($sql);
-            $query->execute([$id]);
-
-            conexao::desconectar();
-            return true;
-
-        } catch (PDOException $exception) {
-            die("Erro ao excluir: " . $exception->getMessage());
-        }
+        $r = $this->api->gravar($p->idPaciente, $this->payload($p));
+        if (!$r['sucesso']) $_SESSION['erro'] = $r['mensagem'];
+        return $r['sucesso'];
+    }
+    public function delete($id): bool
+    {
+        $r = $this->api->excluir($id);
+        if (!$r['sucesso']) $_SESSION['erro'] = $r['mensagem'];
+        return $r['sucesso'];
     }
 }

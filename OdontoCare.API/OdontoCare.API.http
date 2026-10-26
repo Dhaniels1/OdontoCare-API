@@ -1,6 +1,44 @@
-@OdontoCare.API_HostAddress = http://localhost:5240
+@base = http://localhost:5240
+@token = INSIRA_O_JWT
 
-GET {{OdontoCare.API_HostAddress}}/weatherforecast/
-Accept: application/json
+### Login (substitua por usuário/senha migrados)
+POST {{base}}/api/auth/login
+Content-Type: application/json
 
-###
+{"identificador":"admin","senha":"SUBSTITUA_PELA_SENHA"}
+
+### Sem token: deve retornar 401
+GET {{base}}/api/pacientes
+
+### Pacientes
+GET {{base}}/api/pacientes
+Authorization: Bearer {{token}}
+
+### Consultas
+GET {{base}}/api/consultas
+Authorization: Bearer {{token}}
+
+### Materiais, repetir para HIT do cache
+GET {{base}}/api/materiais?pagina=1&tamanho=20
+Authorization: Bearer {{token}}
+
+### Criação de material (Administrador/Secretária)
+POST {{base}}/api/materiais
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{"nomeMaterial":"Luva nitrílica","descricao":"Para procedimentos","estoqueMinimo":10,"unidade":"Caixa"}
+
+### Entrada no estoque
+POST {{base}}/api/materiais/1/entradas
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{"quantidade":5}
+
+### Saída impossível deve retornar 409 se não houver saldo
+POST {{base}}/api/materiais/1/saidas
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{"quantidade":999999}

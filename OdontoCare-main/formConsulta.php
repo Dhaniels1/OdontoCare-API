@@ -14,10 +14,8 @@ if(!podeEditar()){
     exit;
 }
 
-include_once "config/conexao.php";
 include_once "dao/ConsultaDao.php";
-
-$pdo = conexao::conectar();
+include_once "api/ApiClient.php";
 
 $idConsulta = "";
 $idPaciente = "";
@@ -46,9 +44,12 @@ if(isset($_GET["id"])){
     }
 }
 
-$pacientes = $pdo->query("SELECT * FROM paciente ORDER BY nome");
-$usuarios = $pdo->query("SELECT * FROM usuario WHERE tipoUsuario = 'Dentista' ORDER BY nome");
-$procedimentos = $pdo->query("SELECT * FROM procedimento ORDER BY nomeProcedimento");
+$rPacientes = ApiClient::requisitar('GET', 'api/pacientes');
+$rUsuarios = ApiClient::requisitar('GET', 'api/usuarios');
+$rProcedimentos = ApiClient::requisitar('GET', 'api/procedimentos');
+$pacientes = $rPacientes['dados'] ?? [];
+$usuarios = array_values(array_filter($rUsuarios['dados'] ?? [], static fn($u) => $u['tipoUsuario'] === 'Dentista'));
+$procedimentos = $rProcedimentos['dados'] ?? [];
 
 ?>
 

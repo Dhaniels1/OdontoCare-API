@@ -1,45 +1,32 @@
-using Microsoft.EntityFrameworkCore;
-using OdontoCare.Infrastructure.Data;
-using OdontoCare.Application.Interfaces;
-using OdontoCare.Infrastructure.Services;
+using OdontoCare.API.Extensions;
+using OdontoCare.API.Middleware;
+using OdontoCare.Application.Common;
 
 var builder = WebApplication.CreateBuilder(args);
-
-// Add services to the container.
-
-builder.Services.AddControllers();
-
-builder.Services.AddScoped<IPacienteService, PacienteService>();
-builder.Services.AddScoped<IConsultaService, ConsultaService>();
-// Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
-builder.Services.AddDbContext<OdontoCareDbContext>(options =>
-    options.UseMySQL(
-        builder.Configuration.GetConnectionString("OdontoCare")!
-    )
-);
+builder.Services.AddControllers().ConfigureApiBehaviorOptions(options =>
+{
+    options.InvalidModelStateResponseFactory = context =>
+    {
+        var erros = context.ModelState.Values.SelectMany(v => v.Errors)
+            .Select(e => string.IsNullOrWhiteSpace(e.ErrorMessage) ? "Campo inválido." : e.ErrorMessage)
+            .Distinct().ToArray();
+        return new Microsoft.AspNetCore.Mvc.BadRequestObjectResult(ResultWrapper<object>.ValidationError(erros));
+    };
+});
 builder.Services.AddOpenApi();
+builder.Services.AddOdontoCare(builder.Configuration);
 
 var app = builder.Build();
-
-// Configure the HTTP request pipeline.
-if (app.Environment.IsDevelopment())
+app.UseMiddleware<ExceptionMiddleware>();
+app.UseStatusCodePages(async context =>
 {
-    app.MapOpenApi();
-}
-
-app.UseHttpsRedirection();
-
-app.UseAuthorization();
-
-app.MapControllers();
-
-app.MapGet("/api/diagnostico/banco", async (OdontoCareDbContext db) =>
-{
-    var conectado = await db.Database.CanConnectAsync();
-
-    return conectado
-        ? Results.Ok(new { mensagem = "Conexão com o banco realizada com sucesso." })
-        : Results.Problem("Não foi possível conectar ao banco de dados.");
+    var response = context.HttpContext.Response;
+    if (!response.HasStarted && context.HttpContext.Request.Path.StartsWithSegments("/api"))
+        await response.WriteAsJsonAsync(ResultWrapper<object>.Failure("Recurso não encontrado."));
 });
-
+if (app.Environment.IsDevelopment()) app.MapOpenApi(); // /openapi/v1.json
+app.UseHttpsRedirection();
+app.UseAuthentication();
+app.UseAuthorization();
+app.MapControllers();
 app.Run();

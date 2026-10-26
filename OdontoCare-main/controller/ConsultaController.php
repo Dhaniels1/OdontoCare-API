@@ -22,16 +22,6 @@ include_once "../dao/PagamentoDao.php";
 
 if (isset($_GET["id"])) {
 
-    $pagamentoDao = new PagamentoDao();
-
-    if($pagamentoDao->getByConsultaId($_GET["id"])){
-
-        $_SESSION["mensagem"] = "Não é possível excluir uma consulta que possui pagamento vinculado.";
-
-        header("location:../consulta.php");
-        exit;
-    }
-
     $consultaDao = new ConsultaDao();
 
     $consultaDao->delete($_GET["id"]);

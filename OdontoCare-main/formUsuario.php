@@ -36,7 +36,7 @@ if(isset($_GET["id"])){
         $nome = $dados["nome"];
         $email = $dados["email"];
         $login = $dados["login"];
-        $senha = $dados["senha"];
+        $senha = "";
         $tipoUsuario = $dados["tipoUsuario"];
     }
 }
@@ -87,7 +87,8 @@ if(isset($_GET["id"])){
 
             <div>
                 <label>Senha</label>
-                <input type="password" name="txtSenha" value="<?= $senha ?>" class="form-control" required>
+                <input type="password" name="txtSenha" value="" class="form-control" minlength="12" <?= empty($idUsuario) ? "required" : "" ?>>
+                <?php if (!empty($idUsuario)) { ?><small class="text-muted">Deixe em branco para manter a senha atual.</small><?php } ?>
             </div>
 
             <div>

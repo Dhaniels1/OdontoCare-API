@@ -34,6 +34,9 @@ class ApiClient
         $url = self::baseUrl() . "/" . ltrim($caminho, "/");
 
         $cabecalhos = ["Accept: application/json"];
+        if (session_status() === PHP_SESSION_ACTIVE && !empty($_SESSION["jwt"])) {
+            $cabecalhos[] = "Authorization: Bearer " . $_SESSION["jwt"];
+        }
 
         $ch = curl_init($url);
         curl_setopt($ch, CURLOPT_CUSTOMREQUEST, $metodo);
@@ -63,6 +66,9 @@ class ApiClient
             );
         }
 
+        if ($status === 401 && session_status() === PHP_SESSION_ACTIVE) {
+            unset($_SESSION["jwt"], $_SESSION["expiraEmUtc"]);
+        }
         return self::interpretar($status, $resposta);
     }
 

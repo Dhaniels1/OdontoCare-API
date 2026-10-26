@@ -1,5 +1,6 @@
 
 using Microsoft.EntityFrameworkCore;
+using OdontoCare.Application.Common;
 using OdontoCare.Application.Interfaces;
 using OdontoCare.Domain.Entities;
 using OdontoCare.Infrastructure.Data;
@@ -55,6 +56,11 @@ public class PacienteService : IPacienteService
         paciente.Cidade = dados.Cidade;
         paciente.Estado = dados.Estado;
         paciente.DataNascimento = dados.DataNascimento;
+        paciente.HistoricoOdontologico = dados.HistoricoOdontologico;
+        paciente.Alergias = dados.Alergias;
+        paciente.Exames = dados.Exames;
+        paciente.TratamentosAnteriores = dados.TratamentosAnteriores;
+        paciente.ProntuarioClinicoDigital = dados.ProntuarioClinicoDigital;
 
         await _context.SaveChangesAsync();
 
@@ -92,7 +98,7 @@ public class PacienteService : IPacienteService
 
             if (possuiConsultas)
             {
-                throw new InvalidOperationException(
+                throw new BusinessException(
                     "Não é possível excluir este paciente porque existem consultas vinculadas.");
             }
         }

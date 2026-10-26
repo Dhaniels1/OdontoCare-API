@@ -13,10 +13,65 @@ public class OdontoCareDbContext : DbContext
 
     public DbSet<Paciente> Pacientes => Set<Paciente>();
     public DbSet<Consulta> Consultas => Set<Consulta>();
+    public DbSet<Usuario> Usuarios => Set<Usuario>();
+    public DbSet<Procedimento> Procedimentos => Set<Procedimento>();
+    public DbSet<Material> Materiais => Set<Material>();
+    public DbSet<Equipamento> Equipamentos => Set<Equipamento>();
+    public DbSet<MovimentacaoEstoque> MovimentacoesEstoque => Set<MovimentacaoEstoque>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
+
+        modelBuilder.Entity<Procedimento>(e =>
+        {
+            e.ToTable("procedimento"); e.HasKey(x => x.IdProcedimento);
+            e.Property(x => x.IdProcedimento).HasColumnName("idProcedimento").ValueGeneratedOnAdd();
+            e.Property(x => x.NomeProcedimento).HasColumnName("nomeProcedimento");
+            e.Property(x => x.Descricao).HasColumnName("descricao");
+            e.Property(x => x.ValorProcedimento).HasColumnName("valorProcedimento").HasPrecision(10, 2);
+        });
+        modelBuilder.Entity<Usuario>(e =>
+        {
+            e.ToTable("usuario"); e.HasKey(x => x.IdUsuario);
+            e.Property(x => x.IdUsuario).HasColumnName("idUsuario").ValueGeneratedOnAdd();
+            e.Property(x => x.Nome).HasColumnName("nome").HasMaxLength(200).IsRequired();
+            e.Property(x => x.Email).HasColumnName("email").HasMaxLength(200);
+            e.Property(x => x.Login).HasColumnName("login").HasMaxLength(50).IsRequired();
+            e.Property(x => x.Senha).HasColumnName("senha").HasMaxLength(500).IsRequired();
+            e.Property(x => x.TipoUsuario).HasColumnName("tipoUsuario").HasMaxLength(50);
+            e.HasIndex(x => x.Login).IsUnique();
+        });
+        modelBuilder.Entity<Material>(e =>
+        {
+            e.ToTable("material"); e.HasKey(x => x.IdMaterial);
+            e.Property(x => x.IdMaterial).HasColumnName("idMaterial").ValueGeneratedOnAdd();
+            e.Property(x => x.NomeMaterial).HasColumnName("nomeMaterial").HasMaxLength(200).IsRequired();
+            e.Property(x => x.Descricao).HasColumnName("descricao").HasColumnType("text");
+            e.Property(x => x.Quantidade).HasColumnName("quantidade");
+            e.Property(x => x.EstoqueMinimo).HasColumnName("estoqueMinimo");
+            e.Property(x => x.Unidade).HasColumnName("unidade").HasMaxLength(30);
+        });
+        modelBuilder.Entity<Equipamento>(e =>
+        {
+            e.ToTable("equipamento"); e.HasKey(x => x.IdEquipamento);
+            e.Property(x => x.IdEquipamento).HasColumnName("idEquipamento").ValueGeneratedOnAdd();
+            e.Property(x => x.NomeEquipamento).HasColumnName("nomeEquipamento").HasMaxLength(200).IsRequired();
+            e.Property(x => x.Descricao).HasColumnName("descricao").HasColumnType("text");
+            e.Property(x => x.StatusEquipamento).HasColumnName("statusEquipamento").HasMaxLength(50);
+        });
+        modelBuilder.Entity<MovimentacaoEstoque>(e =>
+        {
+            e.ToTable("movimentacao_estoque"); e.HasKey(x => x.IdMovimentacao);
+            e.Property(x => x.IdMovimentacao).HasColumnName("idMovimentacao").ValueGeneratedOnAdd();
+            e.Property(x => x.IdMaterial).HasColumnName("idMaterial");
+            e.Property(x => x.Tipo).HasColumnName("tipo").HasMaxLength(10).IsRequired();
+            e.Property(x => x.Quantidade).HasColumnName("quantidade");
+            e.Property(x => x.DataUtc).HasColumnName("dataUtc").HasColumnType("datetime(6)");
+            e.Property(x => x.IdUsuario).HasColumnName("idUsuario");
+            e.HasOne<Material>().WithMany(x => x.Movimentacoes)
+                .HasForeignKey(x => x.IdMaterial).OnDelete(DeleteBehavior.Restrict);
+        });
 
         modelBuilder.Entity<Paciente>(entity =>
         {

@@ -48,6 +48,9 @@ include_once "permissao.php";
                 </li>
 
                 <li class="nav-item">
+                    <a class="nav-link" href="materiais.php">📦 Materiais</a>
+                </li>
+                <li class="nav-item">
                     <a class="nav-link" href="procedimento.php">
                         🦷 Procedimentos
                     </a>

@@ -7,23 +7,8 @@ if(!isset($_SESSION["usuario"])){
     exit;
 }
 
-include_once "config/conexao.php";
-
-$pdo = conexao::conectar();
-
-$consultas = $pdo->query("
-    SELECT
-        c.idConsulta,
-        c.dataConsulta,
-        c.horarioConsulta,
-        c.statusConsulta,
-        p.nome AS nomePaciente,
-        pr.nomeProcedimento
-    FROM consulta c
-    INNER JOIN paciente p ON c.idPaciente = p.idPaciente
-    INNER JOIN procedimento pr ON c.idProcedimento = pr.idProcedimento
-    ORDER BY c.dataConsulta ASC, c.horarioConsulta ASC
-");
+include_once "dao/ConsultaDao.php";
+$consultas = (new ConsultaDao())->read();
 ?>
 
 <!DOCTYPE html>

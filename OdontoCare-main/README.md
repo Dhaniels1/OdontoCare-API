@@ -94,3 +94,8 @@ Este projeto foi desenvolvido aplicando conceitos de:
 
 Projeto acadêmico desenvolvido para a disciplina de **Engenharia de Software**.
 Pelos alunos do 3º período: Adla Schinaider, Ana Clara, Bruna Oliveira e Glauco Roberto.
+
+
+## Integração com a nova API REST
+
+Este repositório agora inclui autenticação JWT e operações de pacientes, consultas, usuários e materiais via `api/ApiClient.php`. Para pré-requisitos, migração de senha e configuração local, leia `../IMPLEMENTACAO_DANIEL.md`. Módulos financeiros e procedimentos CRUD ainda utilizam PDO legado e precisam de migração futura.

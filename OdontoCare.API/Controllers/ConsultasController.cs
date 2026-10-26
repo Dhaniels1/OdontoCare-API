@@ -1,139 +1,82 @@
-
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using OdontoCare.Application.Common;
 using OdontoCare.Application.DTOs;
 using OdontoCare.Application.Interfaces;
+using OdontoCare.Application.Security;
 using OdontoCare.Domain.Entities;
 
 namespace OdontoCare.API.Controllers;
 
 [ApiController]
-[Route("api/[controller]")]
-public class ConsultasController : ControllerBase
+[Authorize(Roles = Roles.Todos)]
+[Route("api/consultas")]
+public sealed class ConsultasController(IConsultaService service, IConsultaLookupService lookups) : ControllerBase
 {
-    private readonly IConsultaService _consultaService;
-
-    public ConsultasController(IConsultaService consultaService)
+    private bool SoProprias => User.IsInRole(Roles.Dentista);
+    private int UsuarioId => int.TryParse(User.FindFirst("sub")?.Value, out var id) ? id : 0;
+    private static Consulta Map(ConsultaCreateDto d) => new()
     {
-        _consultaService = consultaService;
-    }
+        DataConsulta = d.DataConsulta, HorarioConsulta = d.HorarioConsulta,
+        StatusConsulta = d.StatusConsulta, Observacoes = d.Observacoes,
+        IdUsuario = d.IdUsuario, IdPaciente = d.IdPaciente, IdProcedimento = d.IdProcedimento
+    };
+    private static Consulta Map(ConsultaUpdateDto d) => new()
+    {
+        DataConsulta = d.DataConsulta, HorarioConsulta = d.HorarioConsulta,
+        StatusConsulta = d.StatusConsulta, Observacoes = d.Observacoes,
+        IdUsuario = d.IdUsuario, IdPaciente = d.IdPaciente, IdProcedimento = d.IdProcedimento
+    };
 
-    // GET: api/Consultas
     [HttpGet]
     public async Task<IActionResult> GetTodas()
     {
-        var consultas = await _consultaService.GetTodasAsync();
-        return Ok(consultas);
+        var todas = await lookups.ListarAsync(SoProprias ? UsuarioId : null);
+        return Ok(ResultWrapper<List<ConsultaListaDto>>.Ok(todas));
     }
 
-    // GET: api/Consultas/1
     [HttpGet("{id:int}")]
     public async Task<IActionResult> GetPorId(int id)
     {
-        var consulta = await _consultaService.GetPorIdAsync(id);
-
-        if (consulta == null)
-        {
-            return NotFound(new
-            {
-                mensagem = "Consulta não encontrada."
-            });
-        }
-
-        return Ok(consulta);
+        var c = await service.GetPorIdAsync(id);
+        if (c is null || (SoProprias && c.IdUsuario != UsuarioId))
+            return NotFound(ResultWrapper<object>.NotFound("Consulta não encontrada."));
+        return Ok(ResultWrapper<Consulta>.Ok(c));
     }
 
-    // POST: api/Consultas
+    [Authorize(Roles = Roles.Gestao)]
     [HttpPost]
-    public async Task<IActionResult> Criar(
-        [FromBody] ConsultaCreateDto dados)
+    public async Task<IActionResult> Criar([FromBody] ConsultaCreateDto dados)
     {
-        var consulta = new Consulta
-        {
-            DataConsulta = dados.DataConsulta,
-            HorarioConsulta = dados.HorarioConsulta,
-            StatusConsulta = dados.StatusConsulta,
-            Observacoes = dados.Observacoes,
-            IdUsuario = dados.IdUsuario,
-            IdPaciente = dados.IdPaciente,
-            IdProcedimento = dados.IdProcedimento
-        };
-
-        try
-        {
-            var criada = await _consultaService.CriarAsync(consulta);
-
-            return CreatedAtAction(
-                nameof(GetPorId),
-                new { id = criada.IdConsulta },
-                criada
-            );
-        }
-        catch (InvalidOperationException ex)
-        {
-            return BadRequest(new
-            {
-                mensagem = ex.Message
-            });
-        }
+        var criada = await service.CriarAsync(Map(dados));
+        return CreatedAtAction(nameof(GetPorId), new { id = criada.IdConsulta },
+            ResultWrapper<Consulta>.Ok(criada, "Consulta cadastrada."));
     }
 
-    // PUT: api/Consultas/1
+    [Authorize(Roles = Roles.Gestao)]
     [HttpPut("{id:int}")]
-    public async Task<IActionResult> Atualizar(
-        int id,
-        [FromBody] ConsultaUpdateDto dados)
+    public async Task<IActionResult> Atualizar(int id, [FromBody] ConsultaUpdateDto dados)
     {
-        var consulta = new Consulta
-        {
-            DataConsulta = dados.DataConsulta,
-            HorarioConsulta = dados.HorarioConsulta,
-            StatusConsulta = dados.StatusConsulta,
-            Observacoes = dados.Observacoes,
-            IdUsuario = dados.IdUsuario,
-            IdPaciente = dados.IdPaciente,
-            IdProcedimento = dados.IdProcedimento
-        };
-
-        try
-        {
-            var atualizada = await _consultaService.AtualizarAsync(id, consulta);
-
-            if (!atualizada)
-            {
-                return NotFound(new
-                {
-                    mensagem = "Consulta não encontrada."
-                });
-            }
-
-            return NoContent();
-        }
-        catch (InvalidOperationException ex)
-        {
-            return BadRequest(new
-            {
-                mensagem = ex.Message
-            });
-        }
+        var ok = await service.AtualizarAsync(id, Map(dados));
+        return ok ? Ok(ResultWrapper<object>.Ok(null, "Consulta atualizada.")) :
+            NotFound(ResultWrapper<object>.NotFound("Consulta não encontrada."));
     }
 
-    // DELETE: api/Consultas/1
+    [Authorize(Roles = Roles.Gestao)]
+    [HttpPatch("{id:int}/cancelar")]
+    public async Task<IActionResult> Cancelar(int id)
+    {
+        var ok = await service.CancelarAsync(id);
+        return ok ? Ok(ResultWrapper<object>.Ok(null, "Consulta cancelada e preservada no histórico.")) :
+            NotFound(ResultWrapper<object>.NotFound("Consulta não encontrada."));
+    }
+
+    [Authorize(Roles = Roles.Gestao)]
     [HttpDelete("{id:int}")]
     public async Task<IActionResult> Excluir(int id)
     {
-        var excluida = await _consultaService.ExcluirAsync(id);
-
-        if (!excluida)
-        {
-            return NotFound(new
-            {
-                mensagem = "Consulta não encontrada."
-            });
-        }
-
-        return Ok(new
-        {
-            mensagem = "Consulta excluída com sucesso."
-        });
+        var ok = await service.ExcluirAsync(id);
+        return ok ? Ok(ResultWrapper<object>.Ok(null, "Consulta cancelada e preservada no histórico.")) :
+            NotFound(ResultWrapper<object>.NotFound("Consulta não encontrada."));
     }
 }
