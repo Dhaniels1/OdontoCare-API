@@ -1,4 +1,5 @@
 using Microsoft.Extensions.Caching.Memory;
+using Microsoft.Extensions.Logging;
 using OdontoCare.Application.DTOs;
 using OdontoCare.Application.Interfaces;
 
