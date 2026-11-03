@@ -14,19 +14,20 @@ if(!podeEditar()){
     exit;
 }
 
-include_once "../config/conexao.php";
+validarPostCsrf();
+
 include_once "../model/consulta.php";
 include_once "../model/pagamento.php";
 include_once "../dao/ConsultaDao.php";
 include_once "../dao/PagamentoDao.php";
 
-if (isset($_GET["id"])) {
+if (($_POST["acao"] ?? null) === "excluir") {
 
     $consultaDao = new ConsultaDao();
 
-    $consultaDao->delete($_GET["id"]);
+    $consultaDao->delete(idExclusao());
 
-    $_SESSION["mensagem"] = "Consulta excluída com sucesso.";
+    $_SESSION["mensagem"] = "Consulta cancelada e preservada no histórico.";
 
     header("location:../consulta.php");
     exit;

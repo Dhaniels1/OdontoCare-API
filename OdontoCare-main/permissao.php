@@ -1,4 +1,5 @@
 <?php
+require_once __DIR__ . '/config/seguranca.php';
 
 if (session_status() === PHP_SESSION_ACTIVE && isset($_SESSION["usuario"])) {
     if (empty($_SESSION["jwt"]) || empty($_SESSION["expiraEmUtc"]) ||

@@ -1,6 +1,7 @@
 <?php
 
 session_start();
+require_once __DIR__ . '/permissao.php';
 
 if(!isset($_SESSION["usuario"])){
     header("location:login.php");
@@ -14,7 +15,6 @@ if(!podeEditar()){
     exit;
 }
 
-include_once "config/conexao.php";
 include_once "model/paciente.php";
 include_once "dao/PacienteDao.php";
 
@@ -83,71 +83,72 @@ if (isset($_GET["id"])) {
     <div class="card shadow p-4">
 
         <h1 class="mb-4">
-            <?= $idPaciente == "" ? "Cadastrar Paciente" : "Editar Paciente" ?>
+            <?= e($idPaciente == "" ? "Cadastrar Paciente" : "Editar Paciente") ?>
         </h1>
 
         <form action="controller/PacienteController.php" method="POST" class="d-grid gap-3">
+<?php csrfCampo(); ?>
 
-            <input type="hidden" name="txtIdPaciente" value="<?= $idPaciente ?>">
+            <input type="hidden" name="txtIdPaciente" value="<?= e($idPaciente) ?>">
 
             <div>
                 <label>Nome:</label>
-                <input type="text" name="txtNome" value="<?= $nome ?>" class="form-control" required>
+                <input type="text" name="txtNome" value="<?= e($nome) ?>" class="form-control" required>
             </div>
 
             <div>
                 <label>CPF:</label>
-                <input type="text" name="txtCpf" value="<?= $cpf ?>" class="form-control" required>
+                <input type="text" name="txtCpf" value="<?= e($cpf) ?>" class="form-control" required>
             </div>
 
             <div>
                 <label>Telefone:</label>
-                <input type="text" name="txtTelefone" value="<?= $telefone ?>" class="form-control">
+                <input type="text" name="txtTelefone" value="<?= e($telefone) ?>" class="form-control">
             </div>
 
             <div>
                 <label>Email:</label>
-                <input type="email" name="txtEmail" value="<?= $email ?>" class="form-control">
+                <input type="email" name="txtEmail" value="<?= e($email) ?>" class="form-control">
             </div>
 
             <div>
                 <label>CEP:</label>
-                <input type="text" name="txtCep" value="<?= $cep ?>" class="form-control">
+                <input type="text" name="txtCep" value="<?= e($cep) ?>" class="form-control">
             </div>
 
             <div>
                 <label>Logradouro:</label>
-                <input type="text" name="txtLogradouro" value="<?= $logradouro ?>" class="form-control">
+                <input type="text" name="txtLogradouro" value="<?= e($logradouro) ?>" class="form-control">
             </div>
 
             <div>
                 <label>Número:</label>
-                <input type="text" name="txtNumero" value="<?= $numero ?>" class="form-control">
+                <input type="text" name="txtNumero" value="<?= e($numero) ?>" class="form-control">
             </div>
 
             <div>
                 <label>Bairro:</label>
-                <input type="text" name="txtBairro" value="<?= $bairro ?>" class="form-control">
+                <input type="text" name="txtBairro" value="<?= e($bairro) ?>" class="form-control">
             </div>
 
             <div>
                 <label>Cidade:</label>
-                <input type="text" name="txtCidade" value="<?= $cidade ?>" class="form-control">
+                <input type="text" name="txtCidade" value="<?= e($cidade) ?>" class="form-control">
             </div>
 
             <div>
                 <label>Estado:</label>
-                <input type="text" name="txtEstado" value="<?= $estado ?>" maxlength="2" class="form-control">
+                <input type="text" name="txtEstado" value="<?= e($estado) ?>" maxlength="2" class="form-control">
             </div>
 
             <div>
                 <label>Data de nascimento:</label>
-                <input type="date" name="txtDataNascimento" value="<?= $dataNascimento ?>" class="form-control">
+                <input type="date" name="txtDataNascimento" value="<?= e($dataNascimento) ?>" class="form-control">
             </div>
 
             <div>
                 <label>Histórico odontológico:</label>
-                <textarea name="txtHistoricoOdontologico" class="form-control"><?= $historicoOdontologico ?></textarea>
+                <textarea name="txtHistoricoOdontologico" class="form-control"><?= e($historicoOdontologico) ?></textarea>
             </div>
 
             <div>
@@ -155,7 +156,7 @@ if (isset($_GET["id"])) {
                 <textarea
                     name="txtAlergias"
                     class="form-control"
-                    placeholder="Ex.: alergia à penicilina, anestésicos, látex..."><?= $alergias ?></textarea>
+                    placeholder="Ex.: alergia à penicilina, anestésicos, látex..."><?= e($alergias) ?></textarea>
             </div>
 
             <div>
@@ -163,7 +164,7 @@ if (isset($_GET["id"])) {
                 <textarea
                     name="txtExames"
                     class="form-control"
-                    placeholder="Ex.: radiografia, exame clínico, avaliação inicial..."><?= $exames ?></textarea>
+                    placeholder="Ex.: radiografia, exame clínico, avaliação inicial..."><?= e($exames) ?></textarea>
             </div>
 
             <div>
@@ -171,7 +172,7 @@ if (isset($_GET["id"])) {
                 <textarea
                     name="txtTratamentosAnteriores"
                     class="form-control"
-                    placeholder="Ex.: canal, extração, limpeza, restauração..."><?= $tratamentosAnteriores ?></textarea>
+                    placeholder="Ex.: canal, extração, limpeza, restauração..."><?= e($tratamentosAnteriores) ?></textarea>
             </div>
 
             <div>
@@ -179,7 +180,7 @@ if (isset($_GET["id"])) {
                 <textarea
                     name="txtProntuarioClinicoDigital"
                     class="form-control"
-                    placeholder="Anotações clínicas, evolução do tratamento e observações importantes..."><?= $prontuarioClinicoDigital ?></textarea>
+                    placeholder="Anotações clínicas, evolução do tratamento e observações importantes..."><?= e($prontuarioClinicoDigital) ?></textarea>
             </div>
 
             <button type="submit" name="btGravar" class="btn btn-primary">

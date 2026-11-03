@@ -1,6 +1,7 @@
 <?php
 
 session_start();
+require_once __DIR__ . '/permissao.php';
 
 if(!isset($_SESSION["usuario"])){
     header("location:login.php");
@@ -8,7 +9,6 @@ if(!isset($_SESSION["usuario"])){
 }
 
 include_once "permissao.php";
-include_once "config/conexao.php";
 include_once "dao/ConsultaDao.php";
 
 $consultaDao = new ConsultaDao();
@@ -70,17 +70,17 @@ $lista = $consultaDao->read();
 
             <tr>
 
-                <td><?= $consulta["idConsulta"] ?></td>
-                <td><?= $consulta["nomePaciente"] ?></td>
-                <td><?= $consulta["nomeUsuario"] ?></td>
-                <td><?= $consulta["nomeProcedimento"] ?></td>
+                <td><?= e($consulta["idConsulta"]) ?></td>
+                <td><?= e($consulta["nomePaciente"]) ?></td>
+                <td><?= e($consulta["nomeUsuario"]) ?></td>
+                <td><?= e($consulta["nomeProcedimento"]) ?></td>
 
                 <td>
-                    <?= date("d/m/Y", strtotime($consulta["dataConsulta"])) ?>
+                    <?= e(date("d/m/Y", strtotime($consulta["dataConsulta"]))) ?>
                 </td>
 
                 <td>
-                    <?= date("H:i", strtotime($consulta["horarioConsulta"])) ?>
+                    <?= e(date("H:i", strtotime($consulta["horarioConsulta"]))) ?>
                 </td>
 
                 <td>
@@ -105,20 +105,19 @@ $lista = $consultaDao->read();
 
                 <td>
 
-                    <a href="formConsulta.php?id=<?= $consulta["idConsulta"] ?>"
+                    <a href="formConsulta.php?id=<?= e($consulta["idConsulta"]) ?>"
                        class="btn btn-warning btn-sm">
 
                         Editar
 
                     </a>
 
-                    <a href="controller/ConsultaController.php?id=<?= $consulta["idConsulta"] ?>"
-                       class="btn btn-danger btn-sm"
-                       onclick="return confirm('Deseja realmente excluir esta consulta?')">
-
-                        Excluir
-
-                    </a>
+                    <form action="controller/ConsultaController.php" method="POST" class="d-inline" onsubmit="return confirm('Deseja cancelar este registro?')">
+<?php csrfCampo(); ?>
+<input type="hidden" name="acao" value="excluir">
+<input type="hidden" name="id" value="<?= e($consulta["idConsulta"]) ?>">
+<button type="submit" class="btn btn-danger btn-sm">Cancelar</button>
+</form>
 
                 </td>
 

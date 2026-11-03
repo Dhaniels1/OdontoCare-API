@@ -1,44 +1,18 @@
 <?php
 
 session_start();
+require_once __DIR__ . '/permissao.php';
 
 if(!isset($_SESSION["usuario"])){
     header("location:login.php");
     exit;
 }
 
-include_once "config/conexao.php";
-
-$pdo = conexao::conectar();
-
-if(!isset($_GET["id"])){
-    header("location:pagamento.php");
-    exit;
-}
-
-$idPagamento = $_GET["id"];
-
-$sql = "
-    SELECT
-        pg.idPagamento,
-        pg.valorTotal,
-        pg.formaPagamento,
-        pg.statusPagamento,
-        pg.dataPagamento,
-        p.nome AS nomePaciente,
-        p.cpf,
-        pr.nomeProcedimento
-    FROM pagamento pg
-    INNER JOIN consulta c ON pg.idConsulta = c.idConsulta
-    INNER JOIN paciente p ON c.idPaciente = p.idPaciente
-    INNER JOIN procedimento pr ON c.idProcedimento = pr.idProcedimento
-    WHERE pg.idPagamento = ?
-";
-
-$query = $pdo->prepare($sql);
-$query->execute([$idPagamento]);
-
-$recibo = $query->fetch(PDO::FETCH_ASSOC);
+require_once __DIR__ . '/api/DadosApi.php';
+$idPagamento = filter_input(INPUT_GET, 'id', FILTER_VALIDATE_INT);
+if (!$idPagamento || $idPagamento < 1) { header('Location: pagamento.php'); exit; }
+$dados = dadosApi('GET', 'api/pagamentos/'.$idPagamento.'/recibo', null, true);
+$recibo = $dados === false ? false : array_merge(dataFormularioApi($dados['pagamento']), ['cpf'=>$dados['cpf']]);
 
 if(!$recibo){
     header("location:pagamento.php");
@@ -97,33 +71,33 @@ if(!$recibo){
     </div>
 
     <p>
-        Recebemos de <strong><?= $recibo["nomePaciente"] ?></strong>,
-        CPF <strong><?= $recibo["cpf"] ?></strong>,
+        Recebemos de <strong><?= e($recibo["nomePaciente"]) ?></strong>,
+        CPF <strong><?= e($recibo["cpf"]) ?></strong>,
         o valor de
-        <strong>R$ <?= number_format($recibo["valorTotal"], 2, ',', '.') ?></strong>,
+        <strong>R$ <?= e(number_format($recibo["valorTotal"], 2, ',', '.')) ?></strong>,
         referente ao procedimento odontológico
-        <strong><?= $recibo["nomeProcedimento"] ?></strong>.
+        <strong><?= e($recibo["nomeProcedimento"]) ?></strong>.
     </p>
 
     <p>
         Forma de pagamento:
-        <strong><?= $recibo["formaPagamento"] ?></strong>
+        <strong><?= e($recibo["formaPagamento"]) ?></strong>
     </p>
 
     <p>
         Status:
-        <strong><?= $recibo["statusPagamento"] ?></strong>
+        <strong><?= e($recibo["statusPagamento"]) ?></strong>
     </p>
 
     <p>
         Data do pagamento:
-        <strong><?= date("d/m/Y", strtotime($recibo["dataPagamento"])) ?></strong>
+        <strong><?= e(date("d/m/Y", strtotime($recibo["dataPagamento"]))) ?></strong>
     </p>
 
     <br><br>
 
     <p class="text-center">
-        Muriaé - MG, <?= date("d/m/Y") ?>
+        Muriaé - MG, <?= e(date("d/m/Y")) ?>
     </p>
 
     <br><br>

@@ -11,10 +11,6 @@ namespace OdontoCare.API.Controllers;
 [Authorize(Roles = Roles.Todos)]
 public sealed class ConsultasLookupsController(IConsultaLookupService service) : ControllerBase
 {
-    [HttpGet("api/procedimentos")]
-    public async Task<IActionResult> Procedimentos() =>
-        Ok(ResultWrapper<List<ProcedimentoDto>>.Ok(await service.ListarProcedimentosAsync()));
-
     [Authorize(Roles = Roles.Gestao)]
     [HttpGet("api/usuarios")]
     public async Task<IActionResult> Usuarios() =>

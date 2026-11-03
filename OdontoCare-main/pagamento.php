@@ -1,6 +1,7 @@
 <?php
 
 session_start();
+require_once __DIR__ . '/permissao.php';
 
 if(!isset($_SESSION["usuario"])){
     header("location:login.php");
@@ -8,7 +9,6 @@ if(!isset($_SESSION["usuario"])){
 }
 
 include_once "permissao.php";
-include_once "config/conexao.php";
 include_once "dao/PagamentoDao.php";
 
 $pagamentoDao = new PagamentoDao();
@@ -68,17 +68,17 @@ $lista = $pagamentoDao->read();
 
             <tr>
 
-                <td><?= $pagamento["idPagamento"] ?></td>
+                <td><?= e($pagamento["idPagamento"]) ?></td>
 
-                <td><?= $pagamento["nomePaciente"] ?></td>
+                <td><?= e($pagamento["nomePaciente"]) ?></td>
 
-                <td><?= $pagamento["nomeProcedimento"] ?></td>
+                <td><?= e($pagamento["nomeProcedimento"]) ?></td>
 
                 <td>
-                    R$ <?= number_format($pagamento["valorTotal"], 2, ',', '.') ?>
+                    R$ <?= e(number_format($pagamento["valorTotal"], 2, ',', '.')) ?>
                 </td>
 
-                <td><?= $pagamento["formaPagamento"] ?></td>
+                <td><?= e($pagamento["formaPagamento"]) ?></td>
 
                 <td>
                     <?php
@@ -95,13 +95,13 @@ $lista = $pagamentoDao->read();
                 </td>
 
                 <td>
-                    <?= date("d/m/Y", strtotime($pagamento["dataPagamento"])) ?>
+                    <?= e(date("d/m/Y", strtotime($pagamento["dataPagamento"]))) ?>
                 </td>
 
                 <?php if(podeEditar()){ ?>
                     <td>
 
-                        <a href="recibo.php?id=<?= $pagamento["idPagamento"] ?>"
+                        <a href="recibo.php?id=<?= e($pagamento["idPagamento"]) ?>"
                             class="btn btn-success btn-sm"
                             target="_blank">
 
@@ -109,20 +109,19 @@ $lista = $pagamentoDao->read();
 
                         </a>
 
-                        <a href="formPagamento.php?id=<?= $pagamento["idPagamento"] ?>"
+                        <a href="formPagamento.php?id=<?= e($pagamento["idPagamento"]) ?>"
                             class="btn btn-warning btn-sm">
 
                             Editar
 
                         </a>
 
-                        <a href="controller/PagamentoController.php?id=<?= $pagamento["idPagamento"] ?>"
-                            class="btn btn-danger btn-sm"
-                            onclick="return confirm('Deseja excluir este pagamento?')">
-
-                            Excluir
-
-                        </a>
+                        <form action="controller/PagamentoController.php" method="POST" class="d-inline" onsubmit="return confirm('Deseja excluir este registro?')">
+<?php csrfCampo(); ?>
+<input type="hidden" name="acao" value="excluir">
+<input type="hidden" name="id" value="<?= e($pagamento["idPagamento"]) ?>">
+<button type="submit" class="btn btn-danger btn-sm">Excluir</button>
+</form>
 
                     </td>
                 <?php } ?>

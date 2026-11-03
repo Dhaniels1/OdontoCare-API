@@ -1,0 +1,12 @@
+.git
+**/bin
+**/obj
+.env
+.env.*
+**/secrets.json
+**/appsettings.Development.json
+*.log
+*.zip
+.validation
+.vs
+.vscode

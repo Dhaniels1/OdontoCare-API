@@ -1,6 +1,7 @@
 <?php
 
 session_start();
+require_once __DIR__ . '/permissao.php';
 
 if(!isset($_SESSION["usuario"])){
     header("location:login.php");
@@ -58,19 +59,20 @@ if(isset($_GET["id"])){
     <div class="card shadow p-4">
 
         <h1 class="mb-4">
-            <?= $idProcedimento == "" ? "Cadastrar Procedimento" : "Editar Procedimento" ?>
+            <?= e($idProcedimento == "" ? "Cadastrar Procedimento" : "Editar Procedimento") ?>
         </h1>
 
         <form action="controller/ProcedimentoController.php" method="POST" class="d-grid gap-3">
+<?php csrfCampo(); ?>
 
-            <input type="hidden" name="txtIdProcedimento" value="<?= $idProcedimento ?>">
+            <input type="hidden" name="txtIdProcedimento" value="<?= e($idProcedimento) ?>">
 
             <div>
                 <label>Nome do Procedimento</label>
                 <input
                     type="text"
                     name="txtNomeProcedimento"
-                    value="<?= $nomeProcedimento ?>"
+                    value="<?= e($nomeProcedimento) ?>"
                     class="form-control"
                     required>
             </div>
@@ -79,7 +81,7 @@ if(isset($_GET["id"])){
                 <label>Descrição</label>
                 <textarea
                     name="txtDescricao"
-                    class="form-control"><?= $descricao ?></textarea>
+                    class="form-control"><?= e($descricao) ?></textarea>
             </div>
 
             <div>
@@ -88,7 +90,7 @@ if(isset($_GET["id"])){
                     type="number"
                     step="0.01"
                     name="txtValorProcedimento"
-                    value="<?= $valorProcedimento ?>"
+                    value="<?= e($valorProcedimento) ?>"
                     class="form-control"
                     required>
             </div>

@@ -1,6 +1,7 @@
 <?php
 
 session_start();
+require_once __DIR__ . '/permissao.php';
 
 if(!isset($_SESSION["usuario"])){
     header("location:login.php");
@@ -14,11 +15,10 @@ if(!podeEditar()){
     exit;
 }
 
-include_once "config/conexao.php";
 include_once "model/pagamento.php";
 include_once "dao/PagamentoDao.php";
 
-$pdo = conexao::conectar();
+require_once __DIR__ . '/api/DadosApi.php';
 
 $idPagamento = "";
 $valorTotal = "";
@@ -43,16 +43,7 @@ if(isset($_GET["id"])){
     }
 }
 
-$consultas = $pdo->query("
-    SELECT
-        c.idConsulta,
-        p.nome AS nomePaciente,
-        pr.nomeProcedimento
-    FROM consulta c
-    INNER JOIN paciente p ON c.idPaciente = p.idPaciente
-    INNER JOIN procedimento pr ON c.idProcedimento = pr.idProcedimento
-    ORDER BY c.idConsulta DESC
-");
+$consultas = dadosApi('GET', 'api/consultas');
 
 ?>
 
@@ -76,12 +67,13 @@ $consultas = $pdo->query("
     <div class="card shadow p-4">
 
         <h1 class="mb-4">
-            <?= $idPagamento == "" ? "Cadastrar Pagamento" : "Editar Pagamento" ?>
+            <?= e($idPagamento == "" ? "Cadastrar Pagamento" : "Editar Pagamento") ?>
         </h1>
 
         <form action="controller/PagamentoController.php" method="POST" class="d-grid gap-3">
+<?php csrfCampo(); ?>
 
-            <input type="hidden" name="txtIdPagamento" value="<?= $idPagamento ?>">
+            <input type="hidden" name="txtIdPagamento" value="<?= e($idPagamento) ?>">
 
             <div>
                 <label>Consulta</label>
@@ -92,12 +84,12 @@ $consultas = $pdo->query("
 
                     <?php foreach($consultas as $consulta){ ?>
 
-                    <option value="<?= $consulta["idConsulta"] ?>"
-                        <?= $idConsulta == $consulta["idConsulta"] ? "selected" : "" ?>>
+                    <option value="<?= e($consulta["idConsulta"]) ?>"
+                        <?= e($idConsulta == $consulta["idConsulta"] ? "selected" : "") ?>>
 
-                        <?= $consulta["nomePaciente"] ?>
+                        <?= e($consulta["nomePaciente"]) ?>
                         -
-                        <?= $consulta["nomeProcedimento"] ?>
+                        <?= e($consulta["nomeProcedimento"]) ?>
 
                     </option>
 
@@ -112,7 +104,7 @@ $consultas = $pdo->query("
                 <input type="number"
                        step="0.01"
                        name="txtValorTotal"
-                       value="<?= $valorTotal ?>"
+                       value="<?= e($valorTotal) ?>"
                        class="form-control"
                        required>
             </div>
@@ -122,19 +114,19 @@ $consultas = $pdo->query("
 
                 <select name="txtFormaPagamento" class="form-control">
 
-                    <option value="Pix" <?= $formaPagamento == "Pix" ? "selected" : "" ?>>
+                    <option value="Pix" <?= e($formaPagamento == "Pix" ? "selected" : "") ?>>
                         Pix
                     </option>
 
-                    <option value="Dinheiro" <?= $formaPagamento == "Dinheiro" ? "selected" : "" ?>>
+                    <option value="Dinheiro" <?= e($formaPagamento == "Dinheiro" ? "selected" : "") ?>>
                         Dinheiro
                     </option>
 
-                    <option value="Cartão de Débito" <?= $formaPagamento == "Cartão de Débito" ? "selected" : "" ?>>
+                    <option value="Cartão de Débito" <?= e($formaPagamento == "Cartão de Débito" ? "selected" : "") ?>>
                         Cartão de Débito
                     </option>
 
-                    <option value="Cartão de Crédito" <?= $formaPagamento == "Cartão de Crédito" ? "selected" : "" ?>>
+                    <option value="Cartão de Crédito" <?= e($formaPagamento == "Cartão de Crédito" ? "selected" : "") ?>>
                         Cartão de Crédito
                     </option>
 
@@ -147,15 +139,15 @@ $consultas = $pdo->query("
 
                 <select name="txtStatusPagamento" class="form-control">
 
-                    <option value="Pendente" <?= $statusPagamento == "Pendente" ? "selected" : "" ?>>
+                    <option value="Pendente" <?= e($statusPagamento == "Pendente" ? "selected" : "") ?>>
                         Pendente
                     </option>
 
-                    <option value="Pago" <?= $statusPagamento == "Pago" ? "selected" : "" ?>>
+                    <option value="Pago" <?= e($statusPagamento == "Pago" ? "selected" : "") ?>>
                         Pago
                     </option>
 
-                    <option value="Cancelado" <?= $statusPagamento == "Cancelado" ? "selected" : "" ?>>
+                    <option value="Cancelado" <?= e($statusPagamento == "Cancelado" ? "selected" : "") ?>>
                         Cancelado
                     </option>
 
@@ -168,7 +160,7 @@ $consultas = $pdo->query("
 
                 <input type="date"
                        name="txtDataPagamento"
-                       value="<?= $dataPagamento ?>"
+                       value="<?= e($dataPagamento) ?>"
                        class="form-control"
                        required>
             </div>

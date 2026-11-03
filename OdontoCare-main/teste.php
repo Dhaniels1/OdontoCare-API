@@ -1,7 +1,4 @@
 <?php
-
-include_once "config/conexao.php";
-
-$con = conexao::conectar();
-
-echo "Conectado com sucesso!";
+// O antigo diagnóstico de conexão direta foi aposentado.
+http_response_code(404);
+exit;

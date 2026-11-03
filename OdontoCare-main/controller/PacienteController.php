@@ -17,15 +17,16 @@ if(!podeEditar()){
     exit;
 }
 
-include_once "../config/conexao.php";
+validarPostCsrf();
+
 include_once "../model/paciente.php";
 include_once "../dao/PacienteDao.php";
 
-if(isset($_GET["id"]))
+if (($_POST["acao"] ?? null) === "excluir")
 {
     $pacienteDao = new PacienteDao();
 
-    $resultado = $pacienteDao->delete($_GET["id"]);
+    $resultado = $pacienteDao->delete(idExclusao());
 
     header("location:../paciente.php");
     exit;

@@ -1,0 +1,337 @@
+{
+    "database": "8.0.42",
+    "results": [
+        {
+            "test": "Criar material",
+            "passed": true,
+            "detail": {
+                "expected": 201,
+                "actual": 201
+            }
+        },
+        {
+            "test": "Material inicia com saldo zero e alerta",
+            "passed": true,
+            "detail": null
+        },
+        {
+            "test": "Quantidade zero rejeitada",
+            "passed": true,
+            "detail": {
+                "expected": 400,
+                "actual": 400
+            }
+        },
+        {
+            "test": "Saldo insuficiente rejeitado",
+            "passed": true,
+            "detail": {
+                "expected": 409,
+                "actual": 409
+            }
+        },
+        {
+            "test": "Entrada estoque",
+            "passed": true,
+            "detail": {
+                "expected": 200,
+                "actual": 200
+            }
+        },
+        {
+            "test": "Saida estoque",
+            "passed": true,
+            "detail": {
+                "expected": 200,
+                "actual": 200
+            }
+        },
+        {
+            "test": "Filtro de materiais",
+            "passed": true,
+            "detail": {
+                "expected": 200,
+                "actual": 200
+            }
+        },
+        {
+            "test": "Cache reflete saldo atualizado",
+            "passed": true,
+            "detail": null
+        },
+        {
+            "test": "Historico estoque",
+            "passed": true,
+            "detail": {
+                "expected": 200,
+                "actual": 200
+            }
+        },
+        {
+            "test": "Historico preserva usuario e quantidades",
+            "passed": true,
+            "detail": null
+        },
+        {
+            "test": "Material com historico nao pode ser excluido",
+            "passed": true,
+            "detail": {
+                "expected": 409,
+                "actual": 409
+            }
+        },
+        {
+            "test": "Paginacao invalida",
+            "passed": true,
+            "detail": {
+                "expected": 400,
+                "actual": 400
+            }
+        },
+        {
+            "test": "Saidas concorrentes preservam saldo e historico",
+            "passed": true,
+            "detail": {
+                "http": [
+                    409,
+                    409,
+                    200,
+                    409,
+                    409,
+                    200,
+                    409,
+                    409,
+                    409,
+                    409,
+                    200,
+                    409
+                ],
+                "saldo": 4,
+                "sucessos": 3,
+                "historicoSaidas": 4
+            }
+        },
+        {
+            "test": "Saidas concorrentes nao geram erro interno",
+            "passed": true,
+            "detail": [
+                409,
+                409,
+                200,
+                409,
+                409,
+                200,
+                409,
+                409,
+                409,
+                409,
+                200,
+                409
+            ]
+        },
+        {
+            "test": "Criar equipamento",
+            "passed": true,
+            "detail": {
+                "expected": 201,
+                "actual": 201
+            }
+        },
+        {
+            "test": "Atualizar equipamento",
+            "passed": true,
+            "detail": {
+                "expected": 200,
+                "actual": 200
+            }
+        },
+        {
+            "test": "Listar equipamentos",
+            "passed": true,
+            "detail": {
+                "expected": 200,
+                "actual": 200
+            }
+        },
+        {
+            "test": "Equipamento invalido",
+            "passed": true,
+            "detail": {
+                "expected": 400,
+                "actual": 400
+            }
+        },
+        {
+            "test": "Equipamento inexistente",
+            "passed": true,
+            "detail": {
+                "expected": 404,
+                "actual": 404
+            }
+        },
+        {
+            "test": "Dentista nao altera estoque",
+            "passed": true,
+            "detail": {
+                "expected": 403,
+                "actual": 403
+            }
+        },
+        {
+            "test": "Dentista nao exclui equipamento",
+            "passed": true,
+            "detail": {
+                "expected": 403,
+                "actual": 403
+            }
+        },
+        {
+            "test": "Paciente para agenda",
+            "passed": true,
+            "detail": {
+                "expected": 201,
+                "actual": 201
+            }
+        },
+        {
+            "test": "Agendar consulta",
+            "passed": true,
+            "detail": {
+                "expected": 201,
+                "actual": 201
+            }
+        },
+        {
+            "test": "Conflito sequencial de agenda",
+            "passed": true,
+            "detail": {
+                "expected": 409,
+                "actual": 409
+            }
+        },
+        {
+            "test": "Horario fora do expediente",
+            "passed": true,
+            "detail": {
+                "expected": 409,
+                "actual": 409
+            }
+        },
+        {
+            "test": "Relacionamento inexistente",
+            "passed": true,
+            "detail": {
+                "expected": 409,
+                "actual": 409
+            }
+        },
+        {
+            "test": "Dentista nao acessa consulta alheia",
+            "passed": true,
+            "detail": {
+                "expected": 404,
+                "actual": 404
+            }
+        },
+        {
+            "test": "Lista restrita ao dentista",
+            "passed": true,
+            "detail": {
+                "expected": 200,
+                "actual": 200
+            }
+        },
+        {
+            "test": "Lista nao vaza consulta alheia",
+            "passed": true,
+            "detail": null
+        },
+        {
+            "test": "Cancelar consulta",
+            "passed": true,
+            "detail": {
+                "expected": 200,
+                "actual": 200
+            }
+        },
+        {
+            "test": "Consulta cancelada preservada",
+            "passed": true,
+            "detail": {
+                "expected": 200,
+                "actual": 200
+            }
+        },
+        {
+            "test": "Status cancelado persistido",
+            "passed": true,
+            "detail": null
+        },
+        {
+            "test": "Reagendar horario liberado",
+            "passed": true,
+            "detail": {
+                "expected": 201,
+                "actual": 201
+            }
+        },
+        {
+            "test": "Segunda consulta em horario livre",
+            "passed": true,
+            "detail": {
+                "expected": 201,
+                "actual": 201
+            }
+        },
+        {
+            "test": "Atualizacao nao invade horario ocupado",
+            "passed": true,
+            "detail": {
+                "expected": 409,
+                "actual": 409
+            }
+        },
+        {
+            "test": "Atualizacao para horario livre",
+            "passed": true,
+            "detail": {
+                "expected": 200,
+                "actual": 200
+            }
+        },
+        {
+            "test": "Leitura da consulta atualizada",
+            "passed": true,
+            "detail": {
+                "expected": 200,
+                "actual": 200
+            }
+        },
+        {
+            "test": "Atualizacao de horario persistida",
+            "passed": true,
+            "detail": null
+        },
+        {
+            "test": "Concorrencia agenda permite somente uma reserva",
+            "passed": true,
+            "detail": {
+                "http": [
+                    409,
+                    201,
+                    409,
+                    409,
+                    409,
+                    409,
+                    409,
+                    409,
+                    409,
+                    409,
+                    409,
+                    409
+                ],
+                "reservasPersistidas": 1
+            }
+        }
+    ]
+}

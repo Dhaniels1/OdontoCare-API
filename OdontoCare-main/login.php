@@ -1,5 +1,6 @@
 <?php
 session_start();
+require_once __DIR__ . '/config/seguranca.php';
 
 if(isset($_SESSION["usuario"])){
     header("location:index.php");
@@ -84,6 +85,7 @@ if(isset($_SESSION["usuario"])){
                     <?php } ?>
 
                     <form action="controller/LoginController.php" method="POST">
+<?php csrfCampo(); ?>
 
                         <div class="mb-3">
                             <label class="form-label">Login</label>

@@ -1,0 +1,63 @@
+name: odontocare-academico
+services:
+  db:
+    image: mysql:8.0.42
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:?Execute tools/preparar_docker.ps1}
+      MYSQL_DATABASE: odontocare
+      MYSQL_USER: odontocare
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:?Execute tools/preparar_docker.ps1}
+    volumes:
+      - dados:/var/lib/mysql
+      - ./database/odontocare.sql:/docker-entrypoint-initdb.d/01_schema.sql:ro
+      - ./database/02_migracao_estoque.sql:/docker-entrypoint-initdb.d/02_estoque.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "MYSQL_PWD=$$MYSQL_PASSWORD mysql -h 127.0.0.1 -u odontocare odontocare -e 'SELECT COUNT(*) FROM movimentacao_estoque' >/dev/null 2>&1"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+      start_period: 30s
+  api:
+    build: .
+    environment:
+      ConnectionStrings__OdontoCare: Server=db;Port=3306;Database=odontocare;Uid=odontocare;Pwd=${MYSQL_PASSWORD};
+      Jwt__Key: ${JWT_KEY:?Execute tools/preparar_docker.ps1}
+      Jwt__Issuer: OdontoCare.API
+      Jwt__Audience: OdontoCare.Cliente
+      ASPNETCORE_ENVIRONMENT: Development
+      Clinica__HorarioInicio: "08:00"
+      Clinica__HorarioFim: "18:00"
+    ports:
+      - "127.0.0.1:5244:8080"
+    depends_on:
+      db:
+        condition: service_healthy
+  web:
+    build:
+      context: .
+      dockerfile: docker/php.Dockerfile
+      target: web
+    environment:
+      ODONTOCARE_API_URL: http://api:8080
+    ports:
+      - "127.0.0.1:58084:80"
+    depends_on:
+      - api
+  setup:
+    profiles: [setup]
+    build:
+      context: .
+      dockerfile: docker/php.Dockerfile
+      target: tools
+    environment:
+      ODONTOCARE_DB_HOST: db
+      ODONTOCARE_DB_NAME: odontocare
+      ODONTOCARE_DB_USER: odontocare
+      ODONTOCARE_DB_PASS: ${MYSQL_PASSWORD}
+      ODONTOCARE_ADMIN_LOGIN: ${ADMIN_LOGIN:-admin}
+      ODONTOCARE_ADMIN_PASSWORD: ${ADMIN_PASSWORD:?Execute tools/preparar_docker.ps1}
+    depends_on:
+      db:
+        condition: service_healthy
+volumes:
+  dados:

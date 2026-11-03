@@ -1,5 +1,7 @@
 # Relatório de validação executada
 
+> Registro histórico de 26/10/2026. A validação local posterior, incluindo execução real, correções e evidências, está em [VALIDACAO_LOCAL_2026-11-02.md](VALIDACAO_LOCAL_2026-11-02.md).
+
 Data: 26/10/2026.
 
 ## Verificações efetivamente executadas

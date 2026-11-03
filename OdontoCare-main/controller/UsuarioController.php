@@ -14,6 +14,8 @@ if(!podeEditarUsuario()){
     exit;
 }
 
+validarPostCsrf();
+
 include_once "../model/usuario.php";
 include_once "../dao/UsuarioDao.php";
 
@@ -47,9 +49,9 @@ if(isset($_POST["btGravar"])){
     exit;
 }
 
-if(isset($_GET["del"])){
+if (($_POST["acao"] ?? null) === "excluir"){
 
-    $usuarioDao->delete($_GET["del"]);
+    $usuarioDao->delete(idExclusao());
 
     header("location:../usuario.php");
     exit;

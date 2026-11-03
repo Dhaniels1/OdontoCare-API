@@ -1,6 +1,7 @@
 <?php
 
 session_start();
+require_once __DIR__ . '/permissao.php';
 
 if(!isset($_SESSION["usuario"])){
     header("location:login.php");
@@ -51,19 +52,19 @@ $consultas = (new ConsultaDao())->read();
                     <tr>
 
                         <td>
-                            <?= date("d/m/Y", strtotime($consulta["dataConsulta"])) ?>
+                            <?= e(date("d/m/Y", strtotime($consulta["dataConsulta"]))) ?>
                         </td>
 
                         <td>
-                            <?= date("H:i", strtotime($consulta["horarioConsulta"])) ?>
+                            <?= e(date("H:i", strtotime($consulta["horarioConsulta"]))) ?>
                         </td>
 
                         <td>
-                            <?= $consulta["nomePaciente"] ?>
+                            <?= e($consulta["nomePaciente"]) ?>
                         </td>
 
                         <td>
-                            <?= $consulta["nomeProcedimento"] ?>
+                            <?= e($consulta["nomeProcedimento"]) ?>
                         </td>
 
                         <td>

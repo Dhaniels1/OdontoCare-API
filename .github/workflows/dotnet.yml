@@ -14,3 +14,6 @@ jobs:
         run: dotnet restore OdontoCare.slnx
       - name: Build
         run: dotnet build OdontoCare.slnx --no-restore --configuration Release
+      - name: Architecture boundaries
+        shell: pwsh
+        run: ./tools/verificar_arquitetura.ps1

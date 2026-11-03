@@ -1,6 +1,7 @@
 <?php
 
 session_start();
+require_once __DIR__ . '/permissao.php';
 
 if(!isset($_SESSION["usuario"])){
     header("location:login.php");
@@ -14,7 +15,6 @@ if(!podeEditarUsuario()){
     exit;
 }
 
-include_once "config/conexao.php";
 include_once "model/usuario.php";
 include_once "dao/UsuarioDao.php";
 
@@ -63,31 +63,32 @@ if(isset($_GET["id"])){
     <div class="card shadow p-4">
 
         <h1 class="mb-4">
-            <?= $idUsuario == "" ? "Cadastrar Usuário" : "Editar Usuário" ?>
+            <?= e($idUsuario == "" ? "Cadastrar Usuário" : "Editar Usuário") ?>
         </h1>
 
         <form action="controller/UsuarioController.php" method="POST" class="d-grid gap-3">
+<?php csrfCampo(); ?>
 
-            <input type="hidden" name="txtIdUsuario" value="<?= $idUsuario ?>">
+            <input type="hidden" name="txtIdUsuario" value="<?= e($idUsuario) ?>">
 
             <div>
                 <label>Nome</label>
-                <input type="text" name="txtNome" value="<?= $nome ?>" class="form-control" required>
+                <input type="text" name="txtNome" value="<?= e($nome) ?>" class="form-control" required>
             </div>
 
             <div>
                 <label>Email</label>
-                <input type="email" name="txtEmail" value="<?= $email ?>" class="form-control">
+                <input type="email" name="txtEmail" value="<?= e($email) ?>" class="form-control">
             </div>
 
             <div>
                 <label>Login</label>
-                <input type="text" name="txtLogin" value="<?= $login ?>" class="form-control" required>
+                <input type="text" name="txtLogin" value="<?= e($login) ?>" class="form-control" required>
             </div>
 
             <div>
                 <label>Senha</label>
-                <input type="password" name="txtSenha" value="" class="form-control" minlength="12" <?= empty($idUsuario) ? "required" : "" ?>>
+                <input type="password" name="txtSenha" value="" class="form-control" minlength="12" <?= e(empty($idUsuario) ? "required" : "") ?>>
                 <?php if (!empty($idUsuario)) { ?><small class="text-muted">Deixe em branco para manter a senha atual.</small><?php } ?>
             </div>
 
@@ -98,15 +99,15 @@ if(isset($_GET["id"])){
 
                     <option value="">Selecione</option>
 
-                    <option value="Administrador" <?= $tipoUsuario == "Administrador" ? "selected" : "" ?>>
+                    <option value="Administrador" <?= e($tipoUsuario == "Administrador" ? "selected" : "") ?>>
                         Administrador
                     </option>
 
-                    <option value="Dentista" <?= $tipoUsuario == "Dentista" ? "selected" : "" ?>>
+                    <option value="Dentista" <?= e($tipoUsuario == "Dentista" ? "selected" : "") ?>>
                         Dentista
                     </option>
 
-                    <option value="Secretária" <?= $tipoUsuario == "Secretária" ? "selected" : "" ?>>
+                    <option value="Secretária" <?= e($tipoUsuario == "Secretária" ? "selected" : "") ?>>
                         Secretária
                     </option>
 

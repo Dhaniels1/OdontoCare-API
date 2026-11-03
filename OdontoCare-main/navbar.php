@@ -87,7 +87,7 @@ include_once "permissao.php";
 
                     <span class="navbar-text text-white">
 
-                        👋 <?= $_SESSION["usuario"] ?>
+                        👋 <?= e($_SESSION["usuario"]) ?>
 
                     </span>
 
@@ -95,12 +95,10 @@ include_once "permissao.php";
 
                 <li class="nav-item ms-2">
 
-                    <a class="btn btn-warning btn-sm fw-bold"
-                       href="logout.php">
-
-                        🚪 Sair
-
-                    </a>
+                    <form action="logout.php" method="POST">
+<?php csrfCampo(); ?>
+<button type="submit" class="btn btn-warning btn-sm fw-bold">🚪 Sair</button>
+</form>
 
                 </li>
 

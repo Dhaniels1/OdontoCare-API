@@ -1,5 +1,7 @@
 <?php
 session_start();
+require_once __DIR__ . '/../config/seguranca.php';
+validarPostCsrf();
 require_once __DIR__ . "/../api/ApiClient.php";
 if (!isset($_POST["btEntrar"])) {
     header("Location: ../login.php"); exit;
@@ -14,6 +16,7 @@ if (!$resposta["sucesso"] || empty($resposta["dados"]["token"])) {
 $dados = $resposta["dados"];
 $usuario = $dados["usuario"];
 session_regenerate_id(true);
+unset($_SESSION['csrf']);
 $_SESSION["jwt"] = $dados["token"];
 $_SESSION["expiraEmUtc"] = $dados["expiraEmUtc"];
 $_SESSION["usuario"] = $usuario["nome"];

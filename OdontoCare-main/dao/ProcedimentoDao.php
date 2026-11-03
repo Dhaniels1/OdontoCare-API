@@ -1,155 +1,27 @@
 <?php
-
+require_once __DIR__ . '/../api/DadosApi.php';
 class ProcedimentoDao
 {
-    public function create(Procedimento $procedimento)
+    private function payload(Procedimento $item): array
     {
-        try {
-
-            $pdo = conexao::conectar();
-
-            $sql = "INSERT INTO procedimento
-            (
-                nomeProcedimento,
-                descricao,
-                valorProcedimento
-            )
-            VALUES
-            (
-                ?,?,?
-            )";
-
-            $query = $pdo->prepare($sql);
-
-            $query->execute([
-                $procedimento->nomeProcedimento,
-                $procedimento->descricao,
-                $procedimento->valorProcedimento
-            ]);
-
-            conexao::desconectar();
-
-            return true;
-
-        } catch(PDOException $exception) {
-
-            die("Erro ao cadastrar procedimento: " . $exception->getMessage());
-
-        }
+        return [
+            'nomeProcedimento' => $item->nomeProcedimento,
+            'descricao' => $item->descricao,
+            'valorProcedimento' => (float)$item->valorProcedimento,
+        ];
     }
-
-    public function read()
+    public function create(Procedimento $item): bool
+    { dadosApi('POST', 'api/procedimentos', $this->payload($item)); return true; }
+    public function read(): array
     {
-        try {
-
-            $pdo = conexao::conectar();
-
-            $sql = "SELECT * FROM procedimento ORDER BY nomeProcedimento";
-
-            $resultado = $pdo->query($sql);
-
-            $lista = [];
-
-            foreach($resultado as $linha)
-            {
-                $lista[] = new Procedimento(
-                    $linha["idProcedimento"],
-                    $linha["nomeProcedimento"],
-                    $linha["descricao"],
-                    $linha["valorProcedimento"]
-                );
-            }
-
-            conexao::desconectar();
-
-            return $lista;
-
-        } catch(PDOException $exception) {
-
-            die("Erro ao listar procedimentos: " . $exception->getMessage());
-
-        }
+        $dados = dadosApi('GET', 'api/procedimentos');
+        return array_map(static fn($p) => new Procedimento($p['idProcedimento'], $p['nomeProcedimento'], $p['descricao'], $p['valorProcedimento']), $dados);
     }
+    public function readId($id): array|false
+    { return dataFormularioApi(dadosApi('GET', 'api/procedimentos/'.(int)$id, null, true)); }
+    public function update(Procedimento $item): bool
+    { dadosApi('PUT', 'api/procedimentos/'.(int)$item->idProcedimento, $this->payload($item)); return true; }
+    public function delete($id): bool
+    { dadosApi('DELETE', 'api/procedimentos/'.(int)$id); return true; }
 
-    public function readId($id)
-    {
-        try {
-
-            $pdo = conexao::conectar();
-
-            $sql = "SELECT * FROM procedimento
-                    WHERE idProcedimento = ?";
-
-            $query = $pdo->prepare($sql);
-
-            $query->execute([$id]);
-
-            $dados = $query->fetch(PDO::FETCH_ASSOC);
-
-            conexao::desconectar();
-
-            return $dados;
-
-        } catch(PDOException $exception) {
-
-            die("Erro ao buscar procedimento: " . $exception->getMessage());
-
-        }
-    }
-
-    public function update(Procedimento $procedimento)
-    {
-        try {
-
-            $pdo = conexao::conectar();
-
-            $sql = "UPDATE procedimento
-                    SET
-                        nomeProcedimento = ?,
-                        descricao = ?,
-                        valorProcedimento = ?
-                    WHERE idProcedimento = ?";
-
-            $query = $pdo->prepare($sql);
-
-            $query->execute([
-                $procedimento->nomeProcedimento,
-                $procedimento->descricao,
-                $procedimento->valorProcedimento,
-                $procedimento->idProcedimento
-            ]);
-
-            conexao::desconectar();
-
-            return true;
-
-        } catch(PDOException $exception) {
-
-            die("Erro ao atualizar procedimento: " . $exception->getMessage());
-
-        }
-    }
-
-    public function delete($id)
-    {
-        try {
-
-            $pdo = conexao::conectar();
-
-            $sql = "DELETE FROM procedimento WHERE idProcedimento = ?";
-
-            $query = $pdo->prepare($sql);
-
-            $query->execute([$id]);
-
-            conexao::desconectar();
-
-            return true;
-
-        } catch(PDOException $exception) {
-
-            die("Erro ao excluir procedimento: " . $exception->getMessage());
-
-        }
-    }
 }

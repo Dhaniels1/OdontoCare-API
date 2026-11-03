@@ -1,6 +1,7 @@
 <?php
 
 session_start();
+require_once __DIR__ . '/permissao.php';
 
 if(!isset($_SESSION["usuario"])){
     header("location:login.php");
@@ -14,10 +15,9 @@ if(!podeEditar()){
     exit;
 }
 
-include_once "config/conexao.php";
 include_once "dao/OrcamentoDao.php";
 
-$pdo = conexao::conectar();
+require_once __DIR__ . '/api/DadosApi.php';
 
 $idOrcamento = "";
 $valorTotal = "";
@@ -26,11 +26,7 @@ $statusOrcamento = "Pendente";
 $observacoes = "";
 $idPaciente = "";
 
-$pacientes = $pdo->query("
-    SELECT idPaciente, nome
-    FROM paciente
-    ORDER BY nome
-");
+$pacientes = dadosApi('GET', 'api/pacientes');
 
 if(isset($_GET["id"])){
 
@@ -76,15 +72,16 @@ if(isset($_GET["id"])){
 
 <h2 class="mb-4">
 
-<?= $idOrcamento == "" ? "Novo Orçamento" : "Editar Orçamento" ?>
+<?= e($idOrcamento == "" ? "Novo Orçamento" : "Editar Orçamento") ?>
 
 </h2>
 
 <form action="controller/OrcamentoController.php" method="POST">
+<?php csrfCampo(); ?>
 
 <input type="hidden"
 name="txtIdOrcamento"
-value="<?= $idOrcamento ?>">
+value="<?= e($idOrcamento) ?>">
 
 <div class="mb-3">
 
@@ -100,10 +97,10 @@ required>
 <?php foreach($pacientes as $paciente){ ?>
 
 <option
-value="<?= $paciente["idPaciente"] ?>"
-<?= $idPaciente == $paciente["idPaciente"] ? "selected" : "" ?>>
+value="<?= e($paciente["idPaciente"]) ?>"
+<?= e($idPaciente == $paciente["idPaciente"] ? "selected" : "") ?>>
 
-<?= $paciente["nome"] ?>
+<?= e($paciente["nome"]) ?>
 
 </option>
 
@@ -122,7 +119,7 @@ type="number"
 step="0.01"
 name="txtValorTotal"
 class="form-control"
-value="<?= $valorTotal ?>"
+value="<?= e($valorTotal) ?>"
 required>
 
 </div>
@@ -135,7 +132,7 @@ required>
 type="date"
 name="txtDataOrcamento"
 class="form-control"
-value="<?= $dataOrcamento ?>"
+value="<?= e($dataOrcamento) ?>"
 required>
 
 </div>
@@ -149,21 +146,21 @@ name="txtStatusOrcamento"
 class="form-control">
 
 <option value="Pendente"
-<?= $statusOrcamento=="Pendente"?"selected":"" ?>>
+<?= e($statusOrcamento=="Pendente"?"selected":"") ?>>
 
 Pendente
 
 </option>
 
 <option value="Aprovado"
-<?= $statusOrcamento=="Aprovado"?"selected":"" ?>>
+<?= e($statusOrcamento=="Aprovado"?"selected":"") ?>>
 
 Aprovado
 
 </option>
 
 <option value="Cancelado"
-<?= $statusOrcamento=="Cancelado"?"selected":"" ?>>
+<?= e($statusOrcamento=="Cancelado"?"selected":"") ?>>
 
 Cancelado
 
@@ -180,7 +177,7 @@ Cancelado
 <textarea
 name="txtObservacoes"
 class="form-control"
-rows="4"><?= $observacoes ?></textarea>
+rows="4"><?= e($observacoes) ?></textarea>
 
 </div>
 

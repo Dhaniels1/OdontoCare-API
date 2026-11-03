@@ -1,6 +1,7 @@
 <?php
 
 session_start();
+require_once __DIR__ . '/permissao.php';
 
 if(!isset($_SESSION["usuario"])){
     header("location:login.php");
@@ -8,7 +9,6 @@ if(!isset($_SESSION["usuario"])){
 }
 
 include_once "permissao.php";
-include_once "config/conexao.php";
 include_once "model/paciente.php";
 include_once "dao/PacienteDao.php";
 
@@ -59,22 +59,23 @@ $lista = $pacienteDao->read();
 
             <?php foreach($lista as $paciente) { ?>
                 <tr>
-                    <td><?= $paciente->idPaciente ?></td>
-                    <td><?= $paciente->nome ?></td>
-                    <td><?= $paciente->cpf ?></td>
-                    <td><?= $paciente->telefone ?></td>
+                    <td><?= e($paciente->idPaciente) ?></td>
+                    <td><?= e($paciente->nome) ?></td>
+                    <td><?= e($paciente->cpf) ?></td>
+                    <td><?= e($paciente->telefone) ?></td>
 
                     <?php if(podeEditar()){ ?>
                         <td>
-                            <a href="formPaciente.php?id=<?= $paciente->idPaciente ?>" class="btn btn-warning btn-sm">
+                            <a href="formPaciente.php?id=<?= e($paciente->idPaciente) ?>" class="btn btn-warning btn-sm">
                                 Editar
                             </a>
 
-                            <a href="controller/PacienteController.php?id=<?= $paciente->idPaciente ?>"
-                               class="btn btn-danger btn-sm"
-                               onclick="return confirm('Deseja realmente excluir este paciente?')">
-                                Excluir
-                            </a>
+                            <form action="controller/PacienteController.php" method="POST" class="d-inline" onsubmit="return confirm('Deseja excluir este registro?')">
+<?php csrfCampo(); ?>
+<input type="hidden" name="acao" value="excluir">
+<input type="hidden" name="id" value="<?= e($paciente->idPaciente) ?>">
+<button type="submit" class="btn btn-danger btn-sm">Excluir</button>
+</form>
                         </td>
                     <?php } ?>
                 </tr>

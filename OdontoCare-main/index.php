@@ -1,86 +1,29 @@
 <?php
 
 session_start();
+require_once __DIR__ . '/permissao.php';
 
 if(!isset($_SESSION["usuario"])){
     header("location:login.php");
     exit;
 }
 
-include_once "config/conexao.php";
-
-$pdo = conexao::conectar();
-
-$totalPacientes = $pdo->query("SELECT COUNT(*) FROM paciente")->fetchColumn();
-$totalConsultas = $pdo->query("SELECT COUNT(*) FROM consulta")->fetchColumn();
-$totalProcedimentos = $pdo->query("SELECT COUNT(*) FROM procedimento")->fetchColumn();
-$totalPagamentos = $pdo->query("SELECT COUNT(*) FROM pagamento")->fetchColumn();
-$totalMateriais = $pdo->query("SELECT COUNT(*) FROM material")->fetchColumn();
-
-$consultasHoje = $pdo->query("
-    SELECT COUNT(*) FROM consulta
-    WHERE dataConsulta = CURDATE()
-")->fetchColumn();
-
-$valorRecebido = $pdo->query("
-    SELECT SUM(valorTotal) FROM pagamento
-    WHERE statusPagamento = 'Pago'
-")->fetchColumn();
-$totalMateriais = $pdo->query("
-    SELECT COUNT(*) FROM material
-")->fetchColumn();
-$valorPendente = $pdo->query("
-    SELECT SUM(valorTotal) FROM pagamento
-    WHERE statusPagamento = 'Pendente'
-")->fetchColumn();
-
-$valorCancelado = $pdo->query("
-    SELECT SUM(valorTotal) FROM pagamento
-    WHERE statusPagamento = 'Cancelado'
-")->fetchColumn();
-
-$valorRecebido = $valorRecebido ?? 0;
-$valorPendente = $valorPendente ?? 0;
-$valorCancelado = $valorCancelado ?? 0;
-
-$materiaisBaixoEstoque = $pdo->query("
-    SELECT *
-    FROM material
-    WHERE quantidade <= estoqueMinimo
-")->fetchAll(PDO::FETCH_ASSOC);
-
+require_once __DIR__ . '/api/DadosApi.php';
+$painel = dadosApi('GET', 'api/painel');
+$totalPacientes = $painel['totalPacientes'];
+$totalConsultas = $painel['totalConsultas'];
+$totalProcedimentos = $painel['totalProcedimentos'];
+$totalPagamentos = $painel['totalPagamentos'];
+$totalMateriais = $painel['totalMateriais'];
+$consultasHoje = $painel['consultasHoje'];
+$valorRecebido = $painel['valorRecebido'];
+$valorPendente = $painel['valorPendente'];
+$valorCancelado = $painel['valorCancelado'];
+$materiaisBaixoEstoque = $painel['materiaisBaixoEstoque'];
 $totalBaixoEstoque = count($materiaisBaixoEstoque);
-
-$dadosProcedimentos = $pdo->query("
-    SELECT pr.nomeProcedimento, COUNT(*) AS total
-    FROM consulta c
-    INNER JOIN procedimento pr ON c.idProcedimento = pr.idProcedimento
-    GROUP BY pr.nomeProcedimento
-    ORDER BY total DESC
-")->fetchAll(PDO::FETCH_ASSOC);
-
-$nomesProcedimentos = [];
-$totaisProcedimentos = [];
-
-foreach($dadosProcedimentos as $item){
-    $nomesProcedimentos[] = $item["nomeProcedimento"];
-    $totaisProcedimentos[] = $item["total"];
-}
-
-$proximasConsultas = $pdo->query("
-    SELECT
-        c.dataConsulta,
-        c.horarioConsulta,
-        c.statusConsulta,
-        p.nome AS nomePaciente,
-        pr.nomeProcedimento
-    FROM consulta c
-    INNER JOIN paciente p ON c.idPaciente = p.idPaciente
-    INNER JOIN procedimento pr ON c.idProcedimento = pr.idProcedimento
-    WHERE c.dataConsulta >= CURDATE()
-    ORDER BY c.dataConsulta ASC, c.horarioConsulta ASC
-    LIMIT 5
-");
+$nomesProcedimentos = array_column($painel['dadosProcedimentos'], 'nomeProcedimento');
+$totaisProcedimentos = array_column($painel['dadosProcedimentos'], 'total');
+$proximasConsultas = $painel['proximasConsultas'];
 
 ?>
 
@@ -105,7 +48,7 @@ $proximasConsultas = $pdo->query("
     <h1 class="mb-4">🦷 Dashboard OdontoCare</h1>
 
     <div class="alert alert-success">
-        Bem-vindo(a), <strong><?= $_SESSION["usuario"] ?></strong>
+        Bem-vindo(a), <strong><?= e($_SESSION["usuario"]) ?></strong>
     </div>
 
     <div class="row">
@@ -115,7 +58,7 @@ $proximasConsultas = $pdo->query("
                 <div class="card shadow border-primary h-100">
                     <div class="card-body text-center">
                         <h6>👤 Pacientes</h6>
-                        <h1><?= $totalPacientes ?></h1>
+                        <h1><?= e($totalPacientes) ?></h1>
                     </div>
                 </div>
             </a>
@@ -126,7 +69,7 @@ $proximasConsultas = $pdo->query("
                 <div class="card shadow border-success h-100">
                     <div class="card-body text-center">
                         <h6>📅 Consultas</h6>
-                        <h1><?= $totalConsultas ?></h1>
+                        <h1><?= e($totalConsultas) ?></h1>
                     </div>
                 </div>
             </a>
@@ -137,7 +80,7 @@ $proximasConsultas = $pdo->query("
                 <div class="card shadow border-warning h-100">
                     <div class="card-body text-center">
                         <h6>⏰ Hoje</h6>
-                        <h1><?= $consultasHoje ?></h1>
+                        <h1><?= e($consultasHoje) ?></h1>
                     </div>
                 </div>
             </a>
@@ -148,7 +91,7 @@ $proximasConsultas = $pdo->query("
                 <div class="card shadow border-info h-100">
                     <div class="card-body text-center">
                         <h6>🦷 Procedimentos</h6>
-                        <h1><?= $totalProcedimentos ?></h1>
+                        <h1><?= e($totalProcedimentos) ?></h1>
                     </div>
                 </div>
             </a>
@@ -159,7 +102,7 @@ $proximasConsultas = $pdo->query("
                 <div class="card shadow border-danger h-100">
                     <div class="card-body text-center">
                         <h6>💳 Pagamentos</h6>
-                        <h1><?= $totalPagamentos ?></h1>
+                        <h1><?= e($totalPagamentos) ?></h1>
                     </div>
                 </div>
             </a>
@@ -169,7 +112,7 @@ $proximasConsultas = $pdo->query("
                 <div class="card shadow border-secondary h-100">
                     <div class="card-body text-center">
                         <h6>📦 Materiais</h6>
-                        <h1><?= $totalMateriais ?></h1>
+                        <h1><?= e($totalMateriais) ?></h1>
                     </div>
                 </div>
             </a>
@@ -179,7 +122,7 @@ $proximasConsultas = $pdo->query("
     <div class="card shadow border-warning h-100">
         <div class="card-body text-center">
             <h6>⚠️ Baixo Estoque</h6>
-            <h1><?= $totalBaixoEstoque ?></h1>
+            <h1><?= e($totalBaixoEstoque) ?></h1>
         </div>
     </div>
 </div>
@@ -190,7 +133,7 @@ $proximasConsultas = $pdo->query("
             <div class="card bg-success text-white shadow border-0">
                 <div class="card-body text-center">
                     <h5>💵 Recebido</h5>
-                    <h2>R$ <?= number_format($valorRecebido, 2, ',', '.') ?></h2>
+                    <h2>R$ <?= e(number_format($valorRecebido, 2, ',', '.')) ?></h2>
                 </div>
             </div>
         </div>
@@ -199,7 +142,7 @@ $proximasConsultas = $pdo->query("
             <div class="card bg-warning shadow border-0">
                 <div class="card-body text-center">
                     <h5>⏳ Pendente</h5>
-                    <h2>R$ <?= number_format($valorPendente, 2, ',', '.') ?></h2>
+                    <h2>R$ <?= e(number_format($valorPendente, 2, ',', '.')) ?></h2>
                 </div>
             </div>
         </div>
@@ -208,7 +151,7 @@ $proximasConsultas = $pdo->query("
             <div class="card bg-danger text-white shadow border-0">
                 <div class="card-body text-center">
                     <h5>❌ Cancelado</h5>
-                    <h2>R$ <?= number_format($valorCancelado, 2, ',', '.') ?></h2>
+                    <h2>R$ <?= e(number_format($valorCancelado, 2, ',', '.')) ?></h2>
                 </div>
             </div>
         </div>
@@ -265,14 +208,14 @@ $proximasConsultas = $pdo->query("
                 <?php foreach($materiaisBaixoEstoque as $material){ ?>
 
                 <tr>
-                    <td><?= $material["nomeMaterial"] ?></td>
+                    <td><?= e($material["nomeMaterial"]) ?></td>
                     <td>
                         <span class="badge bg-danger">
-                            <?= $material["quantidade"] ?>
+                            <?= e($material["quantidade"]) ?>
                         </span>
                     </td>
-                    <td><?= $material["estoqueMinimo"] ?></td>
-                    <td><?= $material["unidade"] ?></td>
+                    <td><?= e($material["estoqueMinimo"]) ?></td>
+                    <td><?= e($material["unidade"]) ?></td>
                 </tr>
 
                 <?php } ?>
@@ -309,10 +252,10 @@ $proximasConsultas = $pdo->query("
                 <?php foreach($proximasConsultas as $consulta){ ?>
 
                 <tr>
-                    <td><?= $consulta["nomePaciente"] ?></td>
-                    <td><?= $consulta["nomeProcedimento"] ?></td>
-                    <td><?= date("d/m/Y", strtotime($consulta["dataConsulta"])) ?></td>
-                    <td><?= date("H:i", strtotime($consulta["horarioConsulta"])) ?></td>
+                    <td><?= e($consulta["nomePaciente"]) ?></td>
+                    <td><?= e($consulta["nomeProcedimento"]) ?></td>
+                    <td><?= e(date("d/m/Y", strtotime($consulta["dataConsulta"]))) ?></td>
+                    <td><?= e(date("H:i", strtotime($consulta["horarioConsulta"]))) ?></td>
 
                     <td>
                         <?php
@@ -348,9 +291,9 @@ const graficoProcedimentos = document.getElementById('graficoProcedimentos');
 new Chart(graficoProcedimentos, {
     type: 'doughnut',
     data: {
-        labels: <?= json_encode($nomesProcedimentos) ?>,
+        labels: <?= jsonScript($nomesProcedimentos) ?>,
         datasets: [{
-            data: <?= json_encode($totaisProcedimentos) ?>,
+            data: <?= jsonScript(array_map('intval', $totaisProcedimentos)) ?>,
             backgroundColor: [
                 '#0d6efd',
                 '#198754',
@@ -388,9 +331,9 @@ new Chart(graficoFinanceiro, {
         ],
         datasets: [{
             data: [
-                <?= $valorRecebido ?>,
-                <?= $valorPendente ?>,
-                <?= $valorCancelado ?>
+                <?= jsonScript((float)$valorRecebido) ?>,
+                <?= jsonScript((float)$valorPendente) ?>,
+                <?= jsonScript((float)$valorCancelado) ?>
             ],
             backgroundColor: [
                 '#198754',

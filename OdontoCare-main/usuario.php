@@ -1,6 +1,7 @@
 <?php
 
 session_start();
+require_once __DIR__ . '/permissao.php';
 
 if(!isset($_SESSION["usuario"])){
     header("location:login.php");
@@ -97,25 +98,25 @@ $lista = $usuarioDao->read();
 
                         <td>
 
-                            <?= $usuario["idUsuario"] ?>
+                            <?= e($usuario["idUsuario"]) ?>
 
                         </td>
 
                         <td>
 
-                            <?= $usuario["nome"] ?>
+                            <?= e($usuario["nome"]) ?>
 
                         </td>
 
                         <td>
 
-                            <?= $usuario["email"] ?>
+                            <?= e($usuario["email"]) ?>
 
                         </td>
 
                         <td>
 
-                            <?= $usuario["login"] ?>
+                            <?= e($usuario["login"]) ?>
 
                         </td>
 
@@ -150,21 +151,19 @@ $lista = $usuarioDao->read();
                             <td>
 
                                 <a
-                                href="formUsuario.php?id=<?= $usuario["idUsuario"] ?>"
+                                href="formUsuario.php?id=<?= e($usuario["idUsuario"]) ?>"
                                 class="btn btn-warning btn-sm">
 
                                     Editar
 
                                 </a>
 
-                                <a
-                                href="controller/UsuarioController.php?del=<?= $usuario["idUsuario"] ?>"
-                                class="btn btn-danger btn-sm"
-                                onclick="return confirm('Deseja excluir este usuário?')">
-
-                                    Excluir
-
-                                </a>
+                                <form action="controller/UsuarioController.php" method="POST" class="d-inline" onsubmit="return confirm('Deseja excluir este registro?')">
+<?php csrfCampo(); ?>
+<input type="hidden" name="acao" value="excluir">
+<input type="hidden" name="id" value="<?= e($usuario["idUsuario"]) ?>">
+<button type="submit" class="btn btn-danger btn-sm">Excluir</button>
+</form>
 
                             </td>
 

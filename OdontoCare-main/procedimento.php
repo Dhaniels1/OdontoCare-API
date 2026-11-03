@@ -1,6 +1,7 @@
 <?php
 
 session_start();
+require_once __DIR__ . '/permissao.php';
 
 if(!isset($_SESSION["usuario"])){
     header("location:login.php");
@@ -8,7 +9,6 @@ if(!isset($_SESSION["usuario"])){
 }
 
 include_once "permissao.php";
-include_once "config/conexao.php";
 include_once "model/procedimento.php";
 include_once "dao/ProcedimentoDao.php";
 
@@ -66,26 +66,25 @@ $lista = $procedimentoDao->read();
 
             <tr>
 
-                <td><?= $procedimento->idProcedimento ?></td>
+                <td><?= e($procedimento->idProcedimento) ?></td>
 
-                <td><?= $procedimento->nomeProcedimento ?></td>
+                <td><?= e($procedimento->nomeProcedimento) ?></td>
 
-                <td><?= $procedimento->descricao ?></td>
+                <td><?= e($procedimento->descricao) ?></td>
 
                 <td>
-                    R$ <?= number_format($procedimento->valorProcedimento, 2, ',', '.') ?>
+                    R$ <?= e(number_format($procedimento->valorProcedimento, 2, ',', '.')) ?>
                 </td>
 
                 <?php if(podeEditar()){ ?>
                     <td>
 
-                        <a href="controller/ProcedimentoController.php?id=<?= $procedimento->idProcedimento ?>"
-                           class="btn btn-danger btn-sm"
-                           onclick="return confirm('Deseja excluir este procedimento?')">
-
-                            Excluir
-
-                        </a>
+                        <form action="controller/ProcedimentoController.php" method="POST" class="d-inline" onsubmit="return confirm('Deseja excluir este registro?')">
+<?php csrfCampo(); ?>
+<input type="hidden" name="acao" value="excluir">
+<input type="hidden" name="id" value="<?= e($procedimento->idProcedimento) ?>">
+<button type="submit" class="btn btn-danger btn-sm">Excluir</button>
+</form>
 
                     </td>
                 <?php } ?>

@@ -1,0 +1,145 @@
+{
+    "database": "8.0.42",
+    "results": [
+        {
+            "test": "Pagamento exige login",
+            "passed": true,
+            "detail": null
+        },
+        {
+            "test": "Login administrador web",
+            "passed": true,
+            "detail": null
+        },
+        {
+            "test": "Criar procedimento web",
+            "passed": true,
+            "detail": null
+        },
+        {
+            "test": "Procedimento preserva centavos",
+            "passed": true,
+            "detail": null
+        },
+        {
+            "test": "Atualizar procedimento",
+            "passed": true,
+            "detail": null
+        },
+        {
+            "test": "Consulta API usa procedimento criado no PHP",
+            "passed": true,
+            "detail": null
+        },
+        {
+            "test": "Criar orcamento web",
+            "passed": true,
+            "detail": null
+        },
+        {
+            "test": "Orcamento preserva valor e paciente",
+            "passed": true,
+            "detail": null
+        },
+        {
+            "test": "Atualizar orcamento",
+            "passed": true,
+            "detail": null
+        },
+        {
+            "test": "Criar pagamento web",
+            "passed": true,
+            "detail": null
+        },
+        {
+            "test": "Pagamento preserva valor e consulta",
+            "passed": true,
+            "detail": null
+        },
+        {
+            "test": "Atualizar pagamento",
+            "passed": true,
+            "detail": null
+        },
+        {
+            "test": "Renderizar procedimento.php",
+            "passed": true,
+            "detail": null
+        },
+        {
+            "test": "Renderizar orcamento.php",
+            "passed": true,
+            "detail": null
+        },
+        {
+            "test": "Renderizar pagamento.php",
+            "passed": true,
+            "detail": null
+        },
+        {
+            "test": "Renderizar recibo.php?id=5",
+            "passed": true,
+            "detail": null
+        },
+        {
+            "test": "Recibo apresenta valor brasileiro",
+            "passed": true,
+            "detail": null
+        },
+        {
+            "test": "Recibo inexistente redireciona",
+            "passed": true,
+            "detail": null
+        },
+        {
+            "test": "Rejeitar valor negativo procedimento",
+            "passed": false,
+            "detail": {
+                "http": 302,
+                "registrosNovos": 1
+            }
+        },
+        {
+            "test": "Rejeitar valor negativo orcamento",
+            "passed": false,
+            "detail": {
+                "http": 302,
+                "registrosNovos": 1
+            }
+        },
+        {
+            "test": "Rejeitar valor negativo pagamento",
+            "passed": false,
+            "detail": {
+                "http": 302,
+                "registrosNovos": 1
+            }
+        },
+        {
+            "test": "Pagamento rejeita fracao de centavo",
+            "passed": false,
+            "detail": {
+                "http": 302
+            }
+        },
+        {
+            "test": "Orcamento rejeita data impossivel",
+            "passed": false,
+            "detail": {
+                "http": 200
+            }
+        },
+        {
+            "test": "Pagamento rejeita consulta inexistente sem SQL",
+            "passed": false,
+            "detail": {
+                "http": 200
+            }
+        },
+        {
+            "test": "Dentista nao cria pagamento",
+            "passed": true,
+            "detail": null
+        }
+    ]
+}

@@ -22,6 +22,12 @@ public static class DependencyInjection
         if (string.IsNullOrWhiteSpace(connection))
             throw new InvalidOperationException("Configure ConnectionStrings:OdontoCare por Secret Manager ou variável de ambiente.");
         services.AddDbContext<OdontoCareDbContext>(opt => opt.UseMySQL(connection));
+        services.AddScoped(typeof(IEntityRepository<>), typeof(EntityRepository<>));
+        services.AddScoped<IAgendaLock, AgendaLock>();
+        services.AddSingleton(new HorarioClinica(
+            TimeSpan.Parse(configuration["Clinica:HorarioInicio"] ?? "08:00"),
+            TimeSpan.Parse(configuration["Clinica:HorarioFim"] ?? "18:00")));
+        services.AddScoped<FinanceiroService>();
         services.AddScoped<IPacienteService, PacienteService>();
         services.AddScoped<IConsultaLookupService, ConsultaLookupService>();
         services.AddScoped<IConsultaService, ConsultaService>();

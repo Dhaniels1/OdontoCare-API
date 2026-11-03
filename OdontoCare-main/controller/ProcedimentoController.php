@@ -14,15 +14,17 @@ if(!podeEditar()){
     exit;
 }
 
-include_once "../config/conexao.php";
+validarPostCsrf();
+
 include_once "../model/procedimento.php";
 include_once "../dao/ProcedimentoDao.php";
+include_once "../config/validacaoFinanceira.php";
 
-if(isset($_GET["id"]))
+if (($_POST["acao"] ?? null) === "excluir")
 {
     $procedimentoDao = new ProcedimentoDao();
 
-    $procedimentoDao->delete($_GET["id"]);
+    $procedimentoDao->delete(idExclusao());
 
     header("location:../procedimento.php");
     exit;
@@ -30,12 +32,17 @@ if(isset($_GET["id"]))
 
 if(isset($_POST["btGravar"]))
 {
+    $id = financeiroId('txtIdProcedimento', true);
+    $nome = financeiroTexto('txtNomeProcedimento', 200, true);
+    $descricao = financeiroTexto('txtDescricao', 16000);
+    $valor = financeiroValor('txtValorProcedimento');
+    if ($id !== null) financeiroRegistro('procedimento', 'idProcedimento', $id);
     $procedimento = new Procedimento(
 
-        $_POST["txtIdProcedimento"],
-        $_POST["txtNomeProcedimento"],
-        $_POST["txtDescricao"],
-        $_POST["txtValorProcedimento"]
+        $id,
+        $nome,
+        $descricao,
+        $valor
 
     );
 

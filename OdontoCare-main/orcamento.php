@@ -1,6 +1,7 @@
 <?php
 
 session_start();
+require_once __DIR__ . '/permissao.php';
 
 if(!isset($_SESSION["usuario"])){
     header("location:login.php");
@@ -8,7 +9,6 @@ if(!isset($_SESSION["usuario"])){
 }
 
 include_once "permissao.php";
-include_once "config/conexao.php";
 include_once "dao/OrcamentoDao.php";
 
 $orcamentoDao = new OrcamentoDao();
@@ -68,16 +68,16 @@ $lista = $orcamentoDao->read();
 
             <tr>
 
-                <td><?= $orcamento["idOrcamento"] ?></td>
+                <td><?= e($orcamento["idOrcamento"]) ?></td>
 
-                <td><?= $orcamento["nomePaciente"] ?></td>
+                <td><?= e($orcamento["nomePaciente"]) ?></td>
 
                 <td>
-                    R$ <?= number_format($orcamento["valorTotal"], 2, ',', '.') ?>
+                    R$ <?= e(number_format($orcamento["valorTotal"], 2, ',', '.')) ?>
                 </td>
 
                 <td>
-                    <?= date("d/m/Y", strtotime($orcamento["dataOrcamento"])) ?>
+                    <?= e(date("d/m/Y", strtotime($orcamento["dataOrcamento"]))) ?>
                 </td>
 
                 <td>
@@ -98,20 +98,19 @@ $lista = $orcamentoDao->read();
 
                     <td>
 
-                        <a href="formOrcamento.php?id=<?= $orcamento["idOrcamento"] ?>"
+                        <a href="formOrcamento.php?id=<?= e($orcamento["idOrcamento"]) ?>"
                            class="btn btn-warning btn-sm">
 
                             Editar
 
                         </a>
 
-                        <a href="controller/OrcamentoController.php?id=<?= $orcamento["idOrcamento"] ?>"
-                           class="btn btn-danger btn-sm"
-                           onclick="return confirm('Deseja excluir este orçamento?')">
-
-                            Excluir
-
-                        </a>
+                        <form action="controller/OrcamentoController.php" method="POST" class="d-inline" onsubmit="return confirm('Deseja excluir este registro?')">
+<?php csrfCampo(); ?>
+<input type="hidden" name="acao" value="excluir">
+<input type="hidden" name="id" value="<?= e($orcamento["idOrcamento"]) ?>">
+<button type="submit" class="btn btn-danger btn-sm">Excluir</button>
+</form>
 
                     </td>
 

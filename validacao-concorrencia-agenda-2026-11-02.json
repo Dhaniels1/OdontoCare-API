@@ -1,0 +1,53 @@
+{
+    "database": "8.0.42",
+    "results": [
+        {
+            "test": "Mesmo profissional, pacientes diferentes",
+            "passed": true,
+            "detail": [
+                201,
+                409
+            ]
+        },
+        {
+            "test": "Mesmo paciente, profissionais diferentes",
+            "passed": true,
+            "detail": [
+                201,
+                409
+            ]
+        },
+        {
+            "test": "Duas edicoes disputam horario",
+            "passed": true,
+            "detail": [
+                200,
+                409
+            ]
+        },
+        {
+            "test": "Criacao disputa horario com edicao",
+            "passed": true,
+            "detail": [
+                201,
+                409
+            ]
+        },
+        {
+            "test": "Cancelamento simultaneo a nova reserva",
+            "passed": true,
+            "detail": [
+                200,
+                409
+            ]
+        },
+        {
+            "test": "Recursos distintos aceitam mesmo horario",
+            "passed": true,
+            "detail": [
+                201,
+                201
+            ]
+        }
+    ]
+}

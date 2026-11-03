@@ -1,17 +1,15 @@
 <?php
 session_start();
+require_once __DIR__ . '/permissao.php';
 if (empty($_SESSION['usuario'])) { header('Location: login.php'); exit; }
 require_once 'permissao.php';
 require_once 'api/ApiClient.php';
-if (empty($_SESSION['csrf'])) $_SESSION['csrf'] = bin2hex(random_bytes(32));
+csrfToken();
 
 $mensagem = null;
 $erro = null;
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    if (!hash_equals($_SESSION['csrf'], $_POST['csrf'] ?? '')) {
-        http_response_code(403);
-        exit('Requisição inválida.');
-    }
+    validarPostCsrf();
     if (!podeEditar()) { http_response_code(403); exit('Sem permissão.'); }
     $acao = $_POST['acao'] ?? '';
     $id = intval($_POST['id'] ?? 0);
@@ -33,7 +31,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 $r = ApiClient::requisitar('GET','api/materiais?pagina=1&tamanho=100');
 if (!$r['sucesso']) $erro = $r['mensagem'];
 $itens = $r['dados']['items'] ?? [];
-function e($valor) { return htmlspecialchars((string) $valor, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8'); }
 ?>
 <!doctype html><html lang="pt-BR"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Materiais - OdontoCare</title><link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"></head>

@@ -1,6 +1,7 @@
 <?php
 
 session_start();
+require_once __DIR__ . '/permissao.php';
 
 if(!isset($_SESSION["usuario"])){
     header("location:login.php");
@@ -73,12 +74,13 @@ $procedimentos = $rProcedimentos['dados'] ?? [];
     <div class="card shadow p-4">
 
         <h1 class="mb-4">
-            <?= $idConsulta == "" ? "Agendar Consulta" : "Editar Consulta" ?>
+            <?= e($idConsulta == "" ? "Agendar Consulta" : "Editar Consulta") ?>
         </h1>
 
         <form action="controller/ConsultaController.php" method="POST" class="d-grid gap-3">
+<?php csrfCampo(); ?>
 
-            <input type="hidden" name="txtIdConsulta" value="<?= $idConsulta ?>">
+            <input type="hidden" name="txtIdConsulta" value="<?= e($idConsulta) ?>">
 
             <div>
                 <label>Paciente:</label>
@@ -86,9 +88,9 @@ $procedimentos = $rProcedimentos['dados'] ?? [];
                     <option value="">Selecione</option>
 
                     <?php foreach ($pacientes as $paciente) { ?>
-                        <option value="<?= $paciente["idPaciente"] ?>"
-                            <?= $idPaciente == $paciente["idPaciente"] ? "selected" : "" ?>>
-                            <?= $paciente["nome"] ?>
+                        <option value="<?= e($paciente["idPaciente"]) ?>"
+                            <?= e($idPaciente == $paciente["idPaciente"] ? "selected" : "") ?>>
+                            <?= e($paciente["nome"]) ?>
                         </option>
                     <?php } ?>
 
@@ -101,9 +103,9 @@ $procedimentos = $rProcedimentos['dados'] ?? [];
                     <option value="">Selecione</option>
 
                     <?php foreach ($usuarios as $usuario) { ?>
-                        <option value="<?= $usuario["idUsuario"] ?>"
-                            <?= $idUsuario == $usuario["idUsuario"] ? "selected" : "" ?>>
-                            <?= $usuario["nome"] ?>
+                        <option value="<?= e($usuario["idUsuario"]) ?>"
+                            <?= e($idUsuario == $usuario["idUsuario"] ? "selected" : "") ?>>
+                            <?= e($usuario["nome"]) ?>
                         </option>
                     <?php } ?>
 
@@ -116,9 +118,9 @@ $procedimentos = $rProcedimentos['dados'] ?? [];
                     <option value="">Selecione</option>
 
                     <?php foreach ($procedimentos as $procedimento) { ?>
-                        <option value="<?= $procedimento["idProcedimento"] ?>"
-                            <?= $idProcedimento == $procedimento["idProcedimento"] ? "selected" : "" ?>>
-                            <?= $procedimento["nomeProcedimento"] ?>
+                        <option value="<?= e($procedimento["idProcedimento"]) ?>"
+                            <?= e($idProcedimento == $procedimento["idProcedimento"] ? "selected" : "") ?>>
+                            <?= e($procedimento["nomeProcedimento"]) ?>
                         </option>
                     <?php } ?>
 
@@ -129,7 +131,7 @@ $procedimentos = $rProcedimentos['dados'] ?? [];
                 <label>Data da consulta:</label>
                 <input type="date"
                        name="txtDataConsulta"
-                       value="<?= $dataConsulta ?>"
+                       value="<?= e($dataConsulta) ?>"
                        class="form-control"
                        required>
             </div>
@@ -138,7 +140,7 @@ $procedimentos = $rProcedimentos['dados'] ?? [];
                 <label>Horário:</label>
                 <input type="time"
                        name="txtHorarioConsulta"
-                       value="<?= $horarioConsulta ?>"
+                       value="<?= e($horarioConsulta) ?>"
                        class="form-control"
                        required>
             </div>
@@ -147,15 +149,15 @@ $procedimentos = $rProcedimentos['dados'] ?? [];
                 <label>Status:</label>
                 <select name="txtStatusConsulta" class="form-control">
 
-                    <option value="Agendada" <?= $statusConsulta == "Agendada" ? "selected" : "" ?>>
+                    <option value="Agendada" <?= e($statusConsulta == "Agendada" ? "selected" : "") ?>>
                         Agendada
                     </option>
 
-                    <option value="Concluída" <?= $statusConsulta == "Concluída" ? "selected" : "" ?>>
+                    <option value="Concluída" <?= e($statusConsulta == "Concluída" ? "selected" : "") ?>>
                         Concluída
                     </option>
 
-                    <option value="Cancelada" <?= $statusConsulta == "Cancelada" ? "selected" : "" ?>>
+                    <option value="Cancelada" <?= e($statusConsulta == "Cancelada" ? "selected" : "") ?>>
                         Cancelada
                     </option>
 
@@ -164,7 +166,7 @@ $procedimentos = $rProcedimentos['dados'] ?? [];
 
             <div>
                 <label>Observações:</label>
-                <textarea name="txtObservacoes" class="form-control"><?= $observacoes ?></textarea>
+                <textarea name="txtObservacoes" class="form-control"><?= e($observacoes) ?></textarea>
             </div>
 
             <button type="submit" name="btGravar" class="btn btn-primary">

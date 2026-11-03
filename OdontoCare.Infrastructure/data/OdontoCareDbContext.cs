@@ -19,9 +19,33 @@ public class OdontoCareDbContext : DbContext
     public DbSet<Equipamento> Equipamentos => Set<Equipamento>();
     public DbSet<MovimentacaoEstoque> MovimentacoesEstoque => Set<MovimentacaoEstoque>();
 
+    public DbSet<Orcamento> Orcamentos => Set<Orcamento>();
+    public DbSet<Pagamento> Pagamentos => Set<Pagamento>();
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
+        modelBuilder.Entity<Orcamento>(e =>
+        {
+            e.ToTable("orcamento"); e.HasKey(x => x.IdOrcamento);
+            e.Property(x => x.IdOrcamento).HasColumnName("idOrcamento").ValueGeneratedOnAdd();
+            e.Property(x => x.ValorTotal).HasColumnName("valorTotal").HasPrecision(10, 2);
+            e.Property(x => x.DataOrcamento).HasColumnName("dataOrcamento").HasColumnType("date");
+            e.Property(x => x.StatusOrcamento).HasColumnName("statusOrcamento");
+            e.Property(x => x.Observacoes).HasColumnName("observacoes");
+            e.Property(x => x.IdPaciente).HasColumnName("idPaciente");
+        });
+        modelBuilder.Entity<Pagamento>(e =>
+        {
+            e.ToTable("pagamento"); e.HasKey(x => x.IdPagamento);
+            e.Property(x => x.IdPagamento).HasColumnName("idPagamento").ValueGeneratedOnAdd();
+            e.Property(x => x.ValorTotal).HasColumnName("valorTotal").HasPrecision(10, 2);
+            e.Property(x => x.FormaPagamento).HasColumnName("formaPagamento");
+            e.Property(x => x.StatusPagamento).HasColumnName("statusPagamento");
+            e.Property(x => x.DataPagamento).HasColumnName("dataPagamento").HasColumnType("date");
+            e.Property(x => x.IdConsulta).HasColumnName("idConsulta");
+        });
+
 
         modelBuilder.Entity<Procedimento>(e =>
         {
