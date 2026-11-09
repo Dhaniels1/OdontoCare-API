@@ -29,4 +29,4 @@ if ($env:ODONTOCARE_API_EXPIRACAO_URL) {
         if ($LASTEXITCODE -ne 0) { throw 'Falha na expiração JWT.' }
     } finally { $env:ODONTOCARE_API_URL = $originalUrl }
 }
-Write-Output 'Suítes solicitadas concluídas. Cache, expiração e erro 500 exigem suas configurações específicas descritas no relatório.'
+Write-Output 'Suítes solicitadas concluídas. Cache, expiração e erro 500 exigem suas configurações específicas descritas no README.md.'

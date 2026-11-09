@@ -1,4 +1,4 @@
-﻿**/bin/
+**/bin/
 **/obj/
 .vs/
 .vscode/
@@ -11,3 +11,6 @@ secrets.json
 *.tmp
 *.user
 *.suo
+
+# Resultados locais das verificacoes
+validacao-*.json

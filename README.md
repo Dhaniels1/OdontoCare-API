@@ -1,53 +1,74 @@
-# OdontoCare
+# OdontoCare — como baixar e rodar
 
-Sistema acadêmico de gestão odontológica: pacientes, consultas, usuários, procedimentos, orçamentos, pagamentos, recibos, materiais e equipamentos. A aplicação PHP consome uma API REST em C#; o acesso aos dados fica no servidor da API.
+Sistema acadêmico de gestão odontológica, com cliente PHP, API C# e MySQL. Inclui pacientes, agenda, usuários, procedimentos, orçamentos, pagamentos, recibos, materiais e equipamentos.
 
-## Equipe
+Equipe: Daniel, Bruna, Glaucio e Adla. Conferir nomes completos e matrículas antes da entrega acadêmica.
 
-- Bruna: estrutura inicial, pacientes e consultas; integração compartilhada.
-- Daniel: arquitetura, segurança, ResultWrapper, estoque, cache e integração.
-- Glaucio: documentação e README final.
-- Adla: testes, checklist e demonstração.
+## 1. Baixar o projeto
 
-Os nomes completos e identificadores acadêmicos devem ser conferidos pelo grupo antes da submissão.
-
-## Comece aqui
-
-- [Passagem para o próximo integrante](PASSAGEM_PARA_EQUIPE.md).
-- [Execução nativa e demonstração](EXECUCAO_E_DEMONSTRACAO.md).
-- [Execução com Docker e limite de validação](DOCKER.md).
-- [Checklist acadêmico atualizado](CHECKLIST_ACADEMICO_DANIEL.md).
-- [Relatório da entrega](ENTREGA_DANIEL.md) e [histórico de validação](VALIDACAO_LOCAL_2026-11-02.md).
-
-## Tecnologias e arquitetura
-
-.NET 10 / ASP.NET Core, C#, Entity Framework Core com MySql.EntityFrameworkCore, MySQL 8 (validação final), PHP 8.2, cURL, Bootstrap e Chart.js. MariaDB foi usado nas verificações anteriores; a rodada final desta entrega foi executada com MySQL 8.0.42.
-
-```text
-Cliente PHP -- HTTP + Bearer JWT --> API --> Application --> Domain
-                                      |          ^
-                                      +--> Infrastructure
-                                           banco / cache / hash
-```
-
-- `OdontoCare.Domain`: entidades independentes de banco e framework web.
-- `OdontoCare.Application`: casos de uso, DTOs, validações, contratos de repositórios, ResultWrapper e regras de agenda/financeiro/usuários.
-- `OdontoCare.Infrastructure`: EF, mapeamentos, repositórios, projeções de leitura, transações/bloqueios, hash e cache.
-- `OdontoCare.API`: endpoints, autenticação, autorização, conversão HTTP, erros globais e composição das dependências.
-- `OdontoCare-main`: apresentação PHP, sessão, CSRF e cliente HTTP. Não recebe credenciais do banco.
-- `tools`: utilitários CLI de configuração e testes. Somente esses utilitários precisam de PDO MySQL.
-
-As regras da agenda usam contratos de persistência. O bloqueio transacional de paciente/profissional permanece em Infrastructure para garantir atomicidade. Consultas de projeção (`ConsultaLookupService`) ficam em Infrastructure porque apenas recuperam dados; regras de negócio ficam em Application. Estoque preserva saldo e histórico em uma mesma transação.
-
-## Execução nativa
-
-Pré-requisitos: .NET SDK 10, PHP 8.2 com cURL/mbstring e MySQL 8. Para preparar administrador ou executar testes CLI, habilitar também PDO MySQL; testes HTML usam DOM.
-
-1. Criar uma instância de banco acadêmico vazia. Importar `database/odontocare.sql` e depois `database/02_migracao_estoque.sql` pelo cliente MySQL. Os scripts usam o banco `odontocare` e não inserem pessoas reais.
-2. Configurar a API por variáveis de ambiente. Não colocar segredos em `appsettings.json`:
+O repositório oficial é https://github.com/Dhaniels1/OdontoCare-API. Para baixar pelo Git:
 
 ```powershell
-$connectionSecret = Read-Host 'Connection string MySQL' -AsSecureString
+git clone https://github.com/Dhaniels1/OdontoCare-API.git
+cd OdontoCare-API
+```
+
+Também é possível usar **Code > Download ZIP** no GitHub e extrair. Abra a pasta extraída que contém este README e a solução `OdontoCare.slnx`. Se recebeu o pacote `OdontoCare-Entrega-Limpa.zip`, extraia e abra a pasta `OdontoCare`.
+
+Todos os comandos abaixo devem ser executados na raiz do projeto. No Windows, use PowerShell 7. Não é necessário instalar o SDK em uma pasta específica do computador de Daniel.
+
+## 2. Instalar os pré-requisitos
+
+- .NET **SDK 10**, e não somente o Runtime.
+- PHP **8.2**, com `curl`, `mbstring`, `pdo_mysql` e sessões habilitados. Para os testes de HTML, também `dom`.
+- MySQL **8.0**, iniciado localmente, e um usuário com acesso ao banco.
+- Git somente se optar por clonar.
+
+Confira os programas no terminal:
+
+```powershell
+dotnet --list-sdks
+php --version
+php -m
+```
+
+Se um comando não for reconhecido, inclua a pasta do programa no PATH e abra outro terminal. No XAMPP, o PHP normalmente fica em `C:\xampp\php`; confira as extensões no `php.ini` dessa instalação.
+
+## 3. Preparar o banco
+
+Use uma instalação de desenvolvimento sem um banco `odontocare` com dados que precisem ser preservados. No MySQL Workbench, abra e execute os arquivos nesta ordem:
+
+1. `database/odontocare.sql`
+2. `database/02_migracao_estoque.sql`
+
+Os scripts criam/usam o banco `odontocare`. Não é necessário importar dados de demonstração nem receber senhas de outra pessoa.
+
+## 4. Criar o primeiro administrador
+
+Em um terminal separado, configure os dados da sua instalação. O exemplo de host inclui a porta padrão; ajuste se necessário.
+
+```powershell
+$env:ODONTOCARE_DB_HOST = '127.0.0.1;port=3306'
+$env:ODONTOCARE_DB_NAME = 'odontocare'
+$env:ODONTOCARE_DB_USER = Read-Host 'Usuario do MySQL'
+$dbSecret = Read-Host 'Senha do MySQL' -AsSecureString
+$env:ODONTOCARE_DB_PASS = [Net.NetworkCredential]::new('', $dbSecret).Password
+$env:ODONTOCARE_ADMIN_LOGIN = Read-Host 'Login que deseja criar'
+$adminSecret = Read-Host 'Senha do administrador (minimo 12 caracteres)' -AsSecureString
+$env:ODONTOCARE_ADMIN_PASSWORD = [Net.NetworkCredential]::new('', $adminSecret).Password
+php tools/criar_admin.php
+```
+
+Depois da mensagem de sucesso, feche esse terminal. O utilitário recusa uma segunda inicialização quando já existe administrador. Nesse caso, use a conta já criada. Não há senha padrão.
+
+## 5. Iniciar a API
+
+Abra outro terminal na raiz do projeto. Quando solicitado, informe a conexão completa usando os seus dados, neste formato:
+
+`Server=127.0.0.1;Port=3306;Database=odontocare;Uid=SEU_USUARIO;Pwd=SUA_SENHA;`
+
+```powershell
+$connectionSecret = Read-Host 'Conexao completa do MySQL' -AsSecureString
 $env:ConnectionStrings__OdontoCare = [Net.NetworkCredential]::new('', $connectionSecret).Password
 $env:Jwt__Key = [Convert]::ToBase64String([Security.Cryptography.RandomNumberGenerator]::GetBytes(48))
 $env:Jwt__Issuer = 'OdontoCare.API'
@@ -57,106 +78,104 @@ dotnet build OdontoCare.slnx
 dotnet run --no-build --no-launch-profile --project OdontoCare.API --urls http://127.0.0.1:5240
 ```
 
-Formato da conexão: `Server=HOST;Port=PORTA;Database=odontocare;Uid=USUARIO;Pwd=SENHA;`. Use os valores locais no prompt. As configurações `Clinica__HorarioInicio` e `Clinica__HorarioFim` têm padrão 08:00 e 18:00.
+Mantenha o terminal aberto. Ao gerar outra chave e reiniciar a API, faça login novamente. O contrato OpenAPI fica em http://127.0.0.1:5240/openapi/v1.json; não existe Swagger UI embutida.
 
-3. Criar o primeiro administrador pelo utilitário CLI conforme a seção de primeiro acesso do [roteiro](EXECUCAO_E_DEMONSTRACAO.md). Ele usa PBKDF2 e recusa nova inicialização se já houver administrador. Não existe senha padrão no código.
-4. Em outro terminal, iniciar o cliente:
+## 6. Iniciar o cliente
+
+Abra mais um terminal na raiz do projeto:
 
 ```powershell
 $env:ODONTOCARE_API_URL = 'http://127.0.0.1:5240'
-php -S 127.0.0.1:58080 -t OdontoCare-main
+$sessionDir = Join-Path $env:TEMP 'OdontoCare-sessions'
+New-Item -ItemType Directory -Path $sessionDir -Force | Out-Null
+php -d "session.save_path=$sessionDir" -S 127.0.0.1:58080 -t OdontoCare-main
 ```
 
-Abrir http://127.0.0.1:58080/login.php. No ambiente Development, o contrato OpenAPI está em http://127.0.0.1:5240/openapi/v1.json (sem Swagger UI embutida). O HTTP é destinado à demonstração local.
+Abra **http://127.0.0.1:58080/login.php** e entre com a conta criada no passo 4. O cliente recebe apenas a URL da API. Para parar os servidores, pressione `Ctrl+C` nos respectivos terminais. Os dados permanecem no MySQL.
 
-## JWT e perfis
+## 7. Conferir o funcionamento
 
-`POST /api/auth/login` recebe identificador e senha. Retorna token, expiração UTC e dados públicos do usuário. A senha é armazenada como PBKDF2-SHA256 com 210.000 iterações e salt individual; não retorna nas consultas.
+1. Cadastre um dentista, um paciente e um procedimento fictícios.
+2. Agende uma consulta entre 08:00 e 18:00. Tente repetir o horário para verificar o conflito.
+3. Cadastre orçamento e pagamento e abra o recibo.
+4. Cadastre material, registre entrada/saída e confira o saldo e o alerta de estoque mínimo.
+5. Consulte materiais duas vezes e observe `CACHE MISS` e `CACHE HIT` no terminal da API. Edite um material e confira `CACHE INVALIDADO`.
+6. Entre como dentista para conferir as permissões e a agenda do profissional.
+7. Confira os formulários, navegação, mensagens e saída do sistema, também em tela pequena.
 
-O token tem emissor, público, assinatura, validade e perfil verificados. Validade padrão: 60 minutos; tolerância de relógio: 15 segundos. O PHP guarda JWT na sessão do servidor e envia `Authorization: Bearer <token>`. Ao expirar, solicita novo login; não há refresh token.
+**Glaucio:** conferir estas instruções em sua máquina e completar a identificação da equipe. **Adla:** executar os fluxos acima e registrar qualquer problema com tela, passos, resultado esperado e resultado recebido.
 
-Administrador gerencia contas; Administrador/Secretária realizam operações de gestão; Dentista consulta e acessa apenas sua agenda. Materiais/equipamentos só podem ser excluídos pelo Administrador. O painel do dentista limita a agenda e omite os totais financeiros globais. As consultas de pagamentos/orçamentos/recibos mantêm leitura para os três perfis, conforme comportamento acadêmico existente; escrita exige gestão.
+## 8. Organização e decisões principais
 
-## Endpoints principais
-
-Todos os caminhos abaixo começam com `/api`; exceto login, exigem JWT.
-
-| Caminho | Métodos / comportamento |
+| Pasta | Responsabilidade |
 |---|---|
-| `/auth/login` | POST: autenticar |
-| `/auth/registro` | POST: cadastrar usuário (Administrador) |
-| `/usuarios`, `/usuarios/{id}` | GET; PUT/DELETE por Administrador |
-| `/pacientes`, `/pacientes/{id}` | GET/POST/PUT/DELETE |
-| `/consultas`, `/consultas/{id}` | GET/POST/PUT/DELETE; DELETE cancela sem apagar |
-| `/consultas/{id}/cancelar` | PATCH: cancelamento lógico |
-| `/procedimentos`, `/procedimentos/{id}` | GET/POST/PUT/DELETE |
-| `/orcamentos`, `/orcamentos/{id}` | GET/POST/PUT/DELETE |
-| `/pagamentos`, `/pagamentos/{id}` | GET/POST/PUT/DELETE; lista aceita `consultaId` |
-| `/pagamentos/{id}/recibo` | GET: dados do recibo |
-| `/painel` | GET: indicadores, alertas e próximas consultas |
-| `/materiais`, `/materiais/{id}` | GET/POST/PUT/DELETE; listagem paginada |
-| `/materiais/{id}/entradas`, `/materiais/{id}/saidas` | POST: movimentar saldo |
-| `/materiais/{id}/movimentacoes` | GET: histórico |
-| `/equipamentos`, `/equipamentos/{id}` | GET/POST/PUT/DELETE |
+| `OdontoCare.Domain` | Entidades |
+| `OdontoCare.Application` | Casos de uso, regras, DTOs, interfaces e ResultWrapper |
+| `OdontoCare.Infrastructure` | Banco, repositórios, transações, senhas e cache |
+| `OdontoCare.API` | Endpoints, autenticação, autorização e composição das dependências |
+| `OdontoCare-main` | Telas PHP, sessão e comunicação HTTP com a API |
+| `database` | Scripts de criação e migração |
+| `tools` | Preparação e testes executáveis |
 
-## Requisições e respostas
+O cliente envia o JWT guardado na sessão usando `Authorization: Bearer`. A API verifica assinatura, emissor, público, validade e perfil. O token vale 60 minutos por padrão, com tolerância de 15 segundos; após 401, o cliente remove o token. Senhas usam PBKDF2-SHA256 com salt individual.
 
-Login (valores ilustrativos; substitua pela conta criada localmente):
+As respostas usam `success`, `data`, `message` e `errors`. Exemplo: `{"success":true,"data":[],"message":"Operação realizada com sucesso.","errors":[]}`. Os erros usam códigos 400, 401, 403, 404, 405, 409 e 500 conforme o caso, sem revelar detalhes internos do banco.
 
-```http
-POST /api/auth/login
-Content-Type: application/json
+Principais rotas, sob `/api`: `auth/login`, `auth/registro`, `usuarios`, `pacientes`, `consultas`, `procedimentos`, `orcamentos`, `pagamentos`, `painel`, `materiais` e `equipamentos`. O login usa POST com `{"identificador":"SEU_LOGIN","senha":"SUA_SENHA"}`. As rotas protegidas exigem Bearer; cadastro de usuário exige administrador. Consulte o OpenAPI para os campos e métodos de cada operação.
 
-{"identificador":"SEU_LOGIN","senha":"SUA_SENHA_LOCAL"}
-```
+O cache da lista de materiais é local à API, com expiração absoluta de dois minutos e deslizante de 30 segundos. Alterações removem a chave do cache. A agenda usa bloqueios transacionais; o estoque mantém saldo e histórico na mesma transação.
 
-Consulta protegida:
+## 9. Testes disponíveis
 
-```http
-GET /api/procedimentos
-Authorization: Bearer <token retornado no login>
-```
-
-Resposta ilustrativa:
-
-```json
-{"success":true,"data":[{"idProcedimento":1,"nomeProcedimento":"Avaliação","descricao":"Avaliação inicial","valorProcedimento":80.00}],"message":"Operação realizada com sucesso.","errors":[]}
-```
-
-Inclusão protegida:
-
-```http
-POST /api/procedimentos
-Authorization: Bearer <token>
-Content-Type: application/json
-
-{"nomeProcedimento":"Avaliação","descricao":"Avaliação inicial","valorProcedimento":80.00}
-```
-
-A inclusão responde 201 e `Location`; leitura/edição/exclusão respondem 200 com ResultWrapper. Um conflito de agenda responde 409:
-
-```json
-{"success":false,"data":null,"message":"Paciente ou profissional já possui consulta neste horário.","errors":[]}
-```
-
-Outros códigos: 400 para validação, 401 sem autenticação válida, 403 sem permissão, 404 inexistente, 405 método não permitido e 500 erro interno genérico. O tratamento global não divulga detalhes de banco ao cliente. Financeiro valida faixa DECIMAL(10,2), centavos, datas, opções e vínculos também na API.
-
-## Cache
-
-A listagem real de materiais usa `IMemoryCache`: expiração absoluta de dois minutos e deslizante de 30 segundos. O cache armazena a lista de materiais por versão; filtros e paginação são aplicados depois da leitura. Gravações/movimentações invalidam a versão. Logs mostram `CACHE MISS`, `CACHE HIT` e `CACHE INVALIDADO`.
-
-Demonstração: consultar materiais duas vezes, editar/movimentar um material e consultar novamente. Os dados devem vir da fonte, depois da memória e novamente da fonte após invalidação. `tools/validar_cache.php` verifica também os dois prazos reais. O cache é local a uma instância; distribuição por múltiplas réplicas não faz parte desta entrega.
-
-## Testes e reprodução
-
-As suítes exigem `ODONTOCARE_VALIDACAO_ISOLADA=1`, URL da API e conexão com banco descartável. Testes web exigem a URL do cliente. Elas criam dados fictícios, e algumas excluem seus próprios registros. Não apontar para a base da apresentação ou dados reais. Configuração e resultados: [relatório de entrega](ENTREGA_DANIEL.md).
+Os scripts de teste foram mantidos por fazerem parte do projeto. Os relatórios e resultados antigos não estão neste pacote. Para conferir as fronteiras das camadas:
 
 ```powershell
 ./tools/verificar_arquitetura.ps1
 ```
 
-O workflow do GitHub compila e verifica as fronteiras de camadas após uma publicação autorizada. Não equivale às suítes de integração locais.
+Para testes integrados, prepare outro banco/instância **descartável**, API e cliente apontando para ele. Configure em um terminal as variáveis `ODONTOCARE_DB_HOST`, `ODONTOCARE_DB_NAME`, `ODONTOCARE_DB_USER` e `ODONTOCARE_DB_PASS` como no passo 4, usando esse banco de teste. Configure também:
 
-## Limites da entrega
+```powershell
+$env:ODONTOCARE_VALIDACAO_ISOLADA = '1'
+$env:ODONTOCARE_API_URL = 'http://127.0.0.1:PORTA_API_TESTE'
+$env:ODONTOCARE_WEB_URL = 'http://127.0.0.1:PORTA_CLIENTE_TESTE'
+./tools/validar_entrega.ps1
+```
 
-Docker foi preparado, mas ainda precisa de execução em máquina com Docker. A homologação visual e o ensaio da equipe continuam necessários. As listas financeiras/painel são adequadas à base acadêmica pequena; paginação e agregações otimizadas podem ser acrescentadas se o volume crescer. O novo layout “Agenda em destaque” ficou como melhoria opcional, sem bloquear a entrega funcional.
+Substitua as portas antes de executar. As suítes criam registros fictícios e algumas excluem os próprios registros. Não use o banco da apresentação. Os resultados JSON são gerados na raiz e não precisam acompanhar a passagem do projeto.
+
+Para incluir todos os cenários adicionais, configure `ODONTOCARE_CACHE_LOG` com o caminho absoluto do log da API (categoria do cache em Information), `ODONTOCARE_API_EXPIRACAO_URL` com outra API usando `Jwt__ExpirationMinutes=1`, e `ODONTOCARE_API_FALHA_URL` com uma API apontando para um banco indisponível. O teste de cache precisa de acesso exclusivo aos materiais durante a medição. A automação do GitHub verifica compilação e arquitetura; não substitui os testes integrados.
+
+## 10. Alternativa com Docker
+
+Requer Docker Desktop/Engine com contêineres Linux e Compose em execução. Esta alternativa está preparada, mas a execução dos contêineres ainda precisa de homologação.
+
+```powershell
+./tools/preparar_docker.ps1
+docker compose config --quiet
+docker compose up -d --build
+docker compose --profile setup run --rm --build setup
+```
+
+O preparador cria `.env` e solicita a senha inicial. Login: `admin`. Acesse http://127.0.0.1:58084/login.php; OpenAPI em http://127.0.0.1:5244/openapi/v1.json. O banco é inicializado somente na primeira criação do volume.
+
+Para consultar e parar sem apagar os dados:
+
+```powershell
+docker compose ps
+docker compose logs --tail 60 api web
+docker compose stop
+```
+
+Não compartilhe `.env`. Alterar suas senhas não muda automaticamente as credenciais de um banco já inicializado.
+
+## Problemas comuns e limites
+
+- **Falha de conexão:** confira MySQL, porta, usuário, senha e os dois scripts SQL.
+- **PHP não encontra driver/função:** confira `php -m` e o `php.ini` carregado por `php --ini`.
+- **Login retorna à tela inicial:** confira a pasta de sessões e mantenha a API em execução.
+- **401:** faça login novamente; o token pode ter expirado ou a chave ter mudado.
+- **403:** confira o perfil e utilize o formulário atual, que inclui proteção CSRF.
+- **Porta ocupada:** encerre a instância anterior ou ajuste a porta e a URL correspondente.
+
+O pacote é para execução acadêmica local. A homologação visual, Docker e o ensaio coletivo ainda precisam ser concluídos. O cache ainda merece teste de leitura simultânea com gravação; não há validação de carga ou implantação externa nesta entrega. Esta organização de arquivos não altera as regras do sistema.
