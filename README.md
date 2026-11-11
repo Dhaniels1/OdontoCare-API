@@ -29,15 +29,11 @@ Sistema de gestão para consultório odontológico. Na primeira versão (Feita e
 
 ## 1. Integrantes
 
-| Nome completo | 
-|---|---|
-
+| Nome completo |
+|---|
 | Adla Schinaider Ferreira |
-
 | Bruna Aparecida Oliveira da Silva |
-
 | Daniel da Silva Ribeiro de Castro |
-
 | Glauco Roberto Berbert Souza Costa |
 
 ## 2. Descrição do sistema
