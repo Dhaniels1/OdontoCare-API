@@ -1,7 +1,7 @@
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
-using OdontoCare.Application.DTOs;
-using OdontoCare.Application.Interfaces;
+using OdontoCare.Application.Features.Estoque.DTOs;
+using OdontoCare.Application.Features.Estoque.Interfaces;
 
 namespace OdontoCare.Infrastructure.Caching;
 

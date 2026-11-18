@@ -83,7 +83,7 @@ A API segue **Clean Architecture**. A ideia central é a regra de dependência: 
 
 ```
               ┌───────────────────────────────────────────┐
-              │  OdontoCare.API                           │  Controllers, JWT,
+              │  OdontoCare.API                           │  Controllers, DI,
               │  (porta de entrada HTTP)                  │  middleware de erros
               └───────────────┬───────────────────────────┘
                               │ usa
@@ -108,14 +108,42 @@ A API segue **Clean Architecture**. A ideia central é a regra de dependência: 
 | `OdontoCare.Domain` | Entidades do negócio (Paciente, Consulta, Procedimento, Orçamento, Pagamento, Usuário, Material, Equipamento, MovimentacaoEstoque). Não depende de nenhuma outra camada. |
 | `OdontoCare.Application` | Casos de uso (`Services`), DTOs com as validações, interfaces (`IEntityRepository<T>`, `IMaterialCache`, `ITokenService`, `IPasswordService`...), perfis de acesso (`Roles`) e o `ResultWrapper`. Não conhece EF Core nem ASP.NET. |
 | `OdontoCare.Infrastructure` | Implementações das interfaces: `OdontoCareDbContext` (EF Core), `EntityRepository<T>`, controle de transação da agenda, `MaterialMemoryCache` e `Pbkdf2PasswordService`. |
-| `OdontoCare.API` | Controllers, configuração da injeção de dependências (`Extensions/DependencyInjection.cs`), JWT (`Security/JwtTokenService.cs`) e o tratamento global de erros (`Middleware/ExceptionMiddleware.cs`). |
+| `OdontoCare.API` | Controllers, configuração da injeção de dependências (`Extensions/DependencyInjection.cs`), composição de autenticação JWT (implementação na Infrastructure) e o tratamento global de erros (`Middleware/ExceptionMiddleware.cs`). |
 | `OdontoCare-main` | Aplicativo cliente em PHP (telas, sessão e `api/ApiClient.php`, que faz as chamadas HTTP). |
 | `database` | Scripts SQL de criação e migração. |
 | `tools` | Utilitários de preparação e scripts de validação. |
 
+### Estrutura Package by Feature (Clean Architecture + funcionalidades)
+
+A Application organiza **Common** (contratos e modelos transversais) e **Features** (casos de uso por domínio). Um arquivo C# contém um único tipo público. A mudança preserva os contratos HTTP e os comportamentos existentes.
+
+```text
+OdontoCare.Domain/Entities/
+OdontoCare.Application/
+  Common/
+    Exceptions/BusinessException.cs
+    Interfaces/ (IEntityRepository, IPasswordService, ITokenService)
+    Models/ (ResultWrapper, RespostaDtos [PaginaDto])
+    Security/Roles.cs
+  Features/
+    Auth/ (DTOs, Interfaces, Services)
+    Usuarios/ (DTOs, Interfaces, Services)
+    Pacientes/ (DTOs, Interfaces, Mappings, Services)
+    Consultas/ (DTOs, Interfaces, Mappings, Services)
+    Financeiro/ (DTOs, Interfaces, Mappings, Services, Validation)
+    Estoque/ (DTOs, Interfaces, Mappings, Services)
+OdontoCare.Infrastructure/
+  Data/OdontoCareDbContext.cs
+  Security/ (JwtTokenService, Pbkdf2PasswordService)
+  Repositories/  Caching/  Services/
+OdontoCare.API/ (Controllers, Extensions, Middleware, Results)
+```
+
+As interfaces de agenda (`IAgendaLock`, `IAgendaTransaction`, `HorarioClinica`) ficam em `Features/Consultas/Interfaces/`. Os DTOs de resposta de consulta e procedimento foram separados de `RespostaDtos.cs` porque pertencem a funcionalidades diferentes; o modelo genérico de paginação permaneceu em `Common/Models/RespostaDtos.cs`. O namespace corresponde à pasta de cada tipo. O cliente PHP, os endpoints e a persistência não foram alterados.
+
 ### Decisões de projeto
 
-- **Controllers só conhecem DTOs.** Entidades do Domain nunca saem da Application: os serviços recebem e devolvem DTOs (`Mappings/EntityMappings.cs`), e o script `tools/verificar_arquitetura.ps1` falha se um controller referenciar `OdontoCare.Domain`.
+- **Controllers só conhecem DTOs.** Entidades do Domain nunca saem da Application: os serviços recebem e devolvem DTOs (`Features/*/Mappings/*Mappings.cs`), e o script `tools/verificar_arquitetura.ps1` falha se um controller referenciar `OdontoCare.Domain`.
 - **Serviços coesos por interface.** `IPacienteService`, `IConsultaService`, `IProcedimentoService`, `IOrcamentoService`, `IPagamentoService`, `IPainelService` e `IMaterialService`, cada um com a sua implementação.
 - **Login protegido contra força bruta.** Limite de tentativas por IP (`RateLimit:LoginPorMinuto`, padrão 20) com resposta 429 no formato ResultWrapper, e verificação de senha em tempo semelhante quando o usuário não existe.
 

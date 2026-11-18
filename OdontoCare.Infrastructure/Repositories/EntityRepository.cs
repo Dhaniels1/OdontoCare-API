@@ -1,8 +1,10 @@
-using System.Linq.Expressions;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage;
-using OdontoCare.Application.Interfaces;
+using Microsoft.EntityFrameworkCore;
+using OdontoCare.Application.Common.Interfaces;
+using OdontoCare.Application.Features.Consultas.Interfaces;
 using OdontoCare.Infrastructure.Data;
+using System.Linq.Expressions;
+
 namespace OdontoCare.Infrastructure.Repositories;
 public sealed class EntityRepository<T>(OdontoCareDbContext db) : IEntityRepository<T> where T : class
 {

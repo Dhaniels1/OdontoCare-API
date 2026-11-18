@@ -1,6 +1,6 @@
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging.Abstractions;
-using OdontoCare.Application.DTOs;
+using OdontoCare.Application.Features.Estoque.DTOs;
 using OdontoCare.Infrastructure.Caching;
 
 static List<MaterialDto> Dados(int quantidade) => [new(1, "Material de teste", null, quantidade, 0, "un", false)];

@@ -1,6 +1,6 @@
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Infrastructure;
-using OdontoCare.Application.Common;
+using Microsoft.AspNetCore.Mvc;
+using OdontoCare.Application.Common.Models;
 
 namespace OdontoCare.API.Results;
 
