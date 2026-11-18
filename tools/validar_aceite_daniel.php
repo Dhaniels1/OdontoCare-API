@@ -20,10 +20,17 @@ $auth=raw('POST','api/auth/login',['identificador'=>$users['Secretária']['login
 $list=wrapped('Secretaria consulta profissionais',raw('GET','api/usuarios',null,$secretary),200);note('Listagem nao divulga senha',is_array($list)&&count(array_filter($list,fn($u)=>array_key_exists('senha',$u)))===0);
 wrapped('Secretaria nao cadastra contas: envelope 403',raw('POST','api/auth/registro',['nome'=>'Bloqueado','login'=>'blocked_'.bin2hex(random_bytes(4)),'senha'=>$password,'tipoUsuario'=>'Administrador'],$secretary),403);
 $patient=wrapped('Secretaria cadastra paciente',raw('POST','api/pacientes',['nome'=>'Paciente sintetico aceite','cpf'=>substr((string)hrtime(true),-11)],$secretary),201);
+$pacientes=wrapped('Secretaria lista somente cadastro',raw('GET','api/pacientes',null,$secretary),200);
+note('Listagem nao divulga dados clinicos',is_array($pacientes) && count(array_filter($pacientes,fn($p)=>array_key_exists('alergias',$p)||array_key_exists('prontuarioClinicoDigital',$p)))===0);
+wrapped('Secretaria nao le prontuario',raw('GET','api/pacientes/'.$patient['idPaciente'].'/prontuario',null,$secretary),403);
+wrapped('Secretaria nao altera historico',raw('PUT','api/pacientes/'.$patient['idPaciente'],['nome'=>'Tentativa','historicoOdontologico'=>'Sem autorizacao'],$secretary),403);
+wrapped('Secretaria nao cria dados clinicos',raw('POST','api/pacientes',['nome'=>'Tentativa','cpf'=>substr((string)hrtime(true),-11),'alergias'=>'Sem autorizacao'],$secretary),403);
+wrapped('Administrador le prontuario',raw('GET','api/pacientes/'.$patient['idPaciente'].'/prontuario',null,$admin),200);
 wrapped('Secretaria altera paciente',raw('PUT','api/pacientes/'.$patient['idPaciente'],['nome'=>'Paciente atualizado aceite'],$secretary),200);
 $auth=raw('POST','api/auth/login',['identificador'=>$users['Dentista']['login'],'senha'=>$password]);$dentist=wrapped('Login Dentista com envelope 200',$auth,200)['token'];
 wrapped('Dentista le pacientes',raw('GET','api/pacientes',null,$dentist),200);
 wrapped('Dentista nao altera paciente: envelope 403',raw('PUT','api/pacientes/'.$patient['idPaciente'],['nome'=>'Proibido'],$dentist),403);
+wrapped('Dentista nao le prontuario sem vinculo',raw('GET','api/pacientes/'.$patient['idPaciente'].'/prontuario',null,$dentist),404);
 wrapped('Senha incorreta: envelope 401',raw('POST','api/auth/login',['identificador'=>$login,'senha'=>'Senha incorreta']),401);
 if(getenv('ODONTOCARE_API_FALHA_URL')){$r=raw('POST','api/auth/login',['identificador'=>'teste indisponibilidade','senha'=>$password],null,rtrim(getenv('ODONTOCARE_API_FALHA_URL'),'/'));wrapped('Falha de banco: envelope 500',$r,500);note('Erro 500 nao divulga stack ou conexao',!preg_match('/SQLSTATE|StackTrace|MySqlException|Password=|ConnectionString| at OdontoCare/',$r['raw'])&&str_contains($r['json']['message']??'','erro interno'));}
 // Envia corpo cru para exercitar os filtros do MVC, antes de chegar ao controller.

@@ -36,12 +36,13 @@ class PacienteApi
             "cidade" => ApiClient::nuloSeVazio($d["cidade"]),
             "estado" => ApiClient::nuloSeVazio($d["estado"]),
             "dataNascimento" => ApiClient::nuloSeVazio($d["dataNascimento"]),
-            "historicoOdontologico" => ApiClient::nuloSeVazio($d["historicoOdontologico"]),
-            "alergias" => ApiClient::nuloSeVazio($d["alergias"]),
-            "exames" => ApiClient::nuloSeVazio($d["exames"]),
-            "tratamentosAnteriores" => ApiClient::nuloSeVazio($d["tratamentosAnteriores"]),
-            "prontuarioClinicoDigital" => ApiClient::nuloSeVazio($d["prontuarioClinicoDigital"]),
         ];
+        // Não envia nenhum campo clínico nos formulários da Secretária.
+        foreach (["historicoOdontologico", "alergias", "exames", "tratamentosAnteriores", "prontuarioClinicoDigital"] as $campo) {
+            if (array_key_exists($campo, $d)) {
+                $corpo[$campo] = ApiClient::nuloSeVazio($d[$campo]);
+            }
+        }
 
         if (empty($id)) {
             return ApiClient::requisitar("POST", "api/Pacientes", $corpo);

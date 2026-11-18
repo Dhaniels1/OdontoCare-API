@@ -82,13 +82,13 @@ class ApiClient
 
         // Aceita também respostas no formato { success, message, data, errors } (ResultWrapper).
         if (is_array($json) && array_key_exists("success", $json) && array_key_exists("data", $json)) {
-            return self::resultado(
-                $json["success"] === true && $status >= 200 && $status < 300,
-                $status,
-                $json["data"],
-                isset($json["message"]) ? (string) $json["message"] : "",
-                isset($json["errors"]) && is_array($json["errors"]) ? $json["errors"] : []
-            );
+            $sucesso = $json["success"] === true && $status >= 200 && $status < 300;
+            $erros = self::errosDe($json);
+            $mensagem = isset($json["message"]) ? (string) $json["message"] : "";
+            // Erros específicos são mais úteis do que a mensagem genérica "Dados inválidos".
+            if (!$sucesso && $erros !== []) $mensagem = implode(' ', $erros);
+            if (!$sucesso && trim($mensagem) === '') $mensagem = self::mensagemDeErro($status, $json);
+            return self::resultado($sucesso, $status, $json["data"], $mensagem, $erros);
         }
 
         if ($status >= 200 && $status < 300) {
@@ -115,7 +115,9 @@ class ApiClient
         if (is_array($json) && isset($json["errors"]) && is_array($json["errors"])) {
             foreach ($json["errors"] as $mensagens) {
                 foreach ((array) $mensagens as $mensagem) {
-                    $lista[] = (string) $mensagem;
+                    if (is_scalar($mensagem) && trim((string)$mensagem) !== '') {
+                        $lista[] = (string)$mensagem;
+                    }
                 }
             }
         }

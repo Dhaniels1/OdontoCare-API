@@ -53,11 +53,21 @@ if (isset($_GET["id"])) {
         $cidade = $dados["cidade"];
         $estado = $dados["estado"];
         $dataNascimento = $dados["dataNascimento"];
-        $historicoOdontologico = $dados["historicoOdontologico"];
-        $alergias = $dados["alergias"];
-        $exames = $dados["exames"];
-        $tratamentosAnteriores = $dados["tratamentosAnteriores"];
-        $prontuarioClinicoDigital = $dados["prontuarioClinicoDigital"];
+        if (podeEditarUsuario()) {
+            $clinico = $pacienteDao->readProntuario($idPaciente);
+            if ($clinico !== false) {
+                $historicoOdontologico = $clinico["historicoOdontologico"] ?? "";
+                $alergias = $clinico["alergias"] ?? "";
+                $exames = $clinico["exames"] ?? "";
+                $tratamentosAnteriores = $clinico["tratamentosAnteriores"] ?? "";
+                $prontuarioClinicoDigital = $clinico["prontuarioClinicoDigital"] ?? "";
+            } else {
+                // Não abrir formulário com campos clínicos em branco, para evitar apagá-los.
+                http_response_code(503);
+                require_once __DIR__ . '/api/DadosApi.php';
+                exibirErroApiPagina('Não foi possível carregar o prontuário. Recarregue a página e tente novamente.', 503);
+            }
+        }
     }
 }
 
@@ -146,6 +156,7 @@ if (isset($_GET["id"])) {
                 <input type="date" name="txtDataNascimento" value="<?= e($dataNascimento) ?>" class="form-control">
             </div>
 
+            <?php if (podeEditarUsuario()) { ?>
             <div>
                 <label>Histórico odontológico:</label>
                 <textarea name="txtHistoricoOdontologico" class="form-control"><?= e($historicoOdontologico) ?></textarea>
@@ -182,6 +193,8 @@ if (isset($_GET["id"])) {
                     class="form-control"
                     placeholder="Anotações clínicas, evolução do tratamento e observações importantes..."><?= e($prontuarioClinicoDigital) ?></textarea>
             </div>
+
+            <?php } ?>
 
             <button type="submit" name="btGravar" class="btn btn-primary">
                 Salvar

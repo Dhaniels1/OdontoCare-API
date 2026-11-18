@@ -1,6 +1,6 @@
 namespace OdontoCare.Application.DTOs;
 
-// Retorna dados clínicos apenas em endpoints autenticados.
+// Dados cadastrais (sem campos clínicos), inclusive para listagens.
 public sealed class PacienteResponseDto
 {
     public int IdPaciente { get; set; }
@@ -15,9 +15,4 @@ public sealed class PacienteResponseDto
     public string? Cidade { get; set; }
     public string? Estado { get; set; }
     public DateTime? DataNascimento { get; set; }
-    public string? HistoricoOdontologico { get; set; }
-    public string? Alergias { get; set; }
-    public string? Exames { get; set; }
-    public string? TratamentosAnteriores { get; set; }
-    public string? ProntuarioClinicoDigital { get; set; }
 }

@@ -54,6 +54,8 @@ $lista = $pacienteDao->read();
 
                 <?php if(podeEditar()){ ?>
                     <th>Ações</th>
+                <?php } elseif (($_SESSION['tipoUsuario'] ?? '') === 'Dentista') { ?>
+                    <th>Clínico</th>
                 <?php } ?>
             </tr>
 
@@ -77,6 +79,8 @@ $lista = $pacienteDao->read();
 <button type="submit" class="btn btn-danger btn-sm">Excluir</button>
 </form>
                         </td>
+                    <?php } elseif (($_SESSION['tipoUsuario'] ?? '') === 'Dentista') { ?>
+                        <td><a class="btn btn-info btn-sm" href="prontuario.php?id=<?= e($paciente->idPaciente) ?>">Ver prontuário</a></td>
                     <?php } ?>
                 </tr>
             <?php } ?>
