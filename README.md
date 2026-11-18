@@ -67,7 +67,7 @@ O PHP não acessa mais o banco. Ele só monta a tela e chama a API; quem decide 
 | Hash de senha | **PBKDF2-SHA256** com salt individual por usuário |
 | Cache | `IMemoryCache` (cache em memória da própria API) |
 | Contrato da API | OpenAPI (`Microsoft.AspNetCore.OpenApi`), JSON em `/openapi/v1.json` |
-| Integração contínua | GitHub Actions (compila e confere as fronteiras entre as camadas) |
+| Integração contínua | GitHub Actions (compila, confere fronteiras entre camadas e executa regressões de concorrência do cache) |
 
 **Aplicativo cliente**
 
@@ -156,7 +156,7 @@ Se algum comando não for reconhecido, coloque a pasta do programa no PATH e abr
 
 ### 6.2 Passo a passo
 
-Todos os comandos são executados na **raiz do projeto**. No Windows, use o PowerShell.
+Todos os comandos são executados na **raiz do projeto**. No Windows, use **PowerShell 7 (`pwsh`)**, necessário para os comandos .NET de geração da chave JWT apresentados abaixo. O Windows PowerShell 5.1 não é compatível com esse exemplo. Confira a versão com `$PSVersionTable.PSVersion`.
 
 **1) Baixar o projeto**
 
@@ -248,9 +248,9 @@ Toda resposta da API, de sucesso ou de erro, tem o mesmo formato (classe `Result
 
 Métodos de fábrica: `Ok`, `Failure`, `ValidationError`, `NotFound`, `Unauthorized` e `ServerError`.
 
-O formato vale também para o que o ASP.NET geraria por conta própria: erro de validação do modelo (400), falta de token (401), falta de permissão (403), rota inexistente (404) e exceções não tratadas (middleware global). Nenhuma resposta vaza detalhe interno do banco.
+O formato vale também para os erros automáticos dos endpoints: validação do modelo (400), falta de token (401), falta de permissão (403), rota inexistente (404), método não permitido (405), conteúdo incompatível (415) e exceções não tratadas (middleware global). `ResultWrapperClientErrorFactory` substitui o ProblemDetails nos erros de cliente gerados pelo MVC, preservando o código HTTP. Um envio `text/plain`, XML ou com charset não suportado recebe 415 com `success`, `data`, `message` e `errors`. O contrato OpenAPI é um documento de descrição e não usa esse envelope.
 
-Códigos HTTP usados: **200**, **201**, **400** (dados inválidos), **401** (sem autenticação ou token inválido), **403** (perfil sem permissão), **404** (não encontrado), **409** (conflito, como horário já ocupado ou CPF duplicado) e **500** (erro interno).
+Códigos HTTP usados: **200**, **201**, **400** (dados inválidos), **401** (sem autenticação ou token inválido), **403** (perfil sem permissão), **404** (não encontrado), **405** (método não permitido), **409** (conflito, como horário já ocupado ou CPF duplicado), **415** (Content-Type ou charset não suportado) e **500** (erro interno).
 
 ## 9. Autenticação e autorização (JWT)
 
@@ -284,7 +284,7 @@ Guardadas com **PBKDF2-SHA256 e salt individual**. A senha em texto puro nunca �
 | Perfil | O que pode fazer |
 |---|---|
 | **Administrador** | Tudo, incluindo cadastrar, alterar e remover usuários e excluir materiais e equipamentos |
-| **Secretária** | Cadastrar, alterar e excluir pacientes, consultas, procedimentos, orçamentos, pagamentos, materiais (e movimentar estoque) e equipamentos (cadastrar e alterar) |
+| **Secretária** | Cadastrar, alterar e excluir pacientes, consultas, procedimentos, orçamentos e pagamentos; cadastrar e alterar materiais/equipamentos e movimentar estoque. Não pode excluir materiais ou equipamentos nem gerenciar contas de usuários. |
 | **Dentista** | Somente leitura; na agenda enxerga **apenas as próprias consultas** |
 
 ## 10. Estratégia de cache
@@ -298,7 +298,9 @@ Guardadas com **PBKDF2-SHA256 e salt individual**. A senha em texto puro nunca �
 - absoluta de **2 minutos** (depois disso o dado é descartado de qualquer jeito);
 - deslizante de **30 segundos** (se ninguém usa, sai antes).
 
-**Invalidação:** qualquer escrita em material remove a chave do cache, assim ninguém lê saldo velho. Isso acontece ao **criar**, **editar**, **excluir** e ao **registrar entrada ou saída de estoque**.
+**Invalidação:** depois de uma escrita bem-sucedida pela API — **criar**, **editar**, **excluir** ou **registrar entrada/saída** — a chave é removida e a geração do cache é incrementada sob o mesmo bloqueio usado para publicar leituras. A consulta ao banco acontece fora desse bloqueio. Se uma leitura lenta terminar após uma invalidação, seu resultado é descartado; ela consulta novamente ou usa a nova geração já carregada. Assim uma leitura anterior não repovoa o cache depois da invalidação.
+
+Uma resposta já obtida antes da invalidação continua sendo um retrato daquele instante; não se promete atualização retroativa de respostas em trânsito. Escritas diretas no banco, fora da API, não acionam invalidação e dependem da expiração. Os testes de regressão controlam a ordem entre leituras lentas e invalidações, incluindo alterações sucessivas e uma nova geração carregada por outra requisição.
 
 **Como saber, pelo log, de onde veio o dado:**
 
@@ -356,7 +358,7 @@ Os campos exatos de cada operação estão no contrato OpenAPI (`/openapi/v1.jso
 
 ## 12. Exemplos de requisição e resposta
 
-Os exemplos usam `curl` e a API em `http://127.0.0.1:5240`. Os valores são ilustrativos; o formato é o que a API devolve.
+Os exemplos desta seção usam **Bash** (por exemplo, Git Bash), `curl` e a API em `http://127.0.0.1:5240`. A barra `\` no fim da linha é continuação de Bash, não de PowerShell. Para executar no PowerShell 7, adapte a continuação ou utilize o arquivo `OdontoCare.API/OdontoCare.API.http` em um cliente HTTP compatível. Os valores são ilustrativos; o formato é o que a API devolve.
 
 ### 12.1 Login (sucesso)
 
@@ -513,6 +515,8 @@ O projeto traz scripts executáveis na pasta `tools`:
 | `validar_cache.php` | Comportamento do cache (MISS, HIT e invalidação) |
 | `validar_concorrencia_agenda.php` | Duas reservas simultâneas no mesmo horário |
 | `validar_expiracao_jwt.php` | Token expirado deve ser recusado |
+| `validar_aceite_daniel.php` | Perfis, PBKDF2, envelopes de sucesso/erro e regressões de Content-Type/charset incompatível (415) e JSON malformado (400) |
+| `CacheRegression` | Cinco cenários determinísticos de cache concorrente, HIT e recuperação após falha da fonte, sem banco |
 
 Para conferir só a arquitetura:
 
@@ -531,7 +535,31 @@ $env:ODONTOCARE_WEB_URL = 'http://127.0.0.1:PORTA_CLIENTE_TESTE'
 
 Para incluir todos os cenários extras, configure também `ODONTOCARE_CACHE_LOG` (caminho absoluto do log da API, com a categoria do cache em Information), `ODONTOCARE_API_EXPIRACAO_URL` (outra API com `Jwt__ExpirationMinutes=1`) e `ODONTOCARE_API_FALHA_URL` (API apontando para um banco indisponível). O teste de cache precisa de acesso exclusivo aos materiais durante a medição.
 
-O GitHub Actions (`.github/workflows/dotnet.yml`) compila a solução e roda a verificação de arquitetura a cada push, mas **não** substitui os testes integrados.
+Para repetir somente a regressão do cache, sem banco:
+
+```powershell
+dotnet run --project tools/CacheRegression --configuration Release
+```
+
+O GitHub Actions (`.github/workflows/dotnet.yml`) compila a solução, verifica a arquitetura e executa esses cinco cenários a cada push, mas **não** substitui os testes integrados. A suíte de API também cobre DELETE de consultas: dentista bloqueado, Secretária autorizada e cancelamento lógico persistido sem apagar o histórico.
+
+### Relatório da Adla
+
+Validação final em **17/11/2026**: compilação Release sem erros ou avisos, verificação de dependências da arquitetura, 56 arquivos PHP sem erros de sintaxe, **292 verificações integradas sem falhas** (API, cliente PHP, segurança, financeiro, concorrência, expiração/invalidação do cache e expiração JWT) e **5 cenários de regressão do cache aprovados**. A execução usou banco MySQL descartável e processos locais isolados; não valida Docker, carga ou revisão visual completa.
+
+O [relatório original de QA de 16/11/2026](qa/Relatorio_QA_OdontoCare.xlsx) foi incorporado sem alterações. Ele contém resultados de testes, não arquivos novos de telas PHP, e não informa o hash do commit testado.
+
+A aba **Casos de teste** contém 117 registros: 115 marcados `PASS` e 2 `PASS COM OBS.` (CT-114 e CT-118, repetidos após renovar o token). Há um problema de alinhamento em 85 linhas: o status está na coluna F em vez de G. Por isso, o resumo de 32 aprovados não representa a contagem completa; a contagem aqui considera o status textual nas duas colunas. Os cinco itens da aba **Pendências** incluem quatro lacunas/limites e uma verificação já aprovada, não cinco casos reprovados. A planilha original foi preservada como evidência histórica.
+
+Conciliação com a validação final:
+
+- **DELETE de consultas:** incluído na suíte de API, verificando autorização e preservação do histórico.
+- **Validações financeiras:** as suítes automatizadas exercitam valores negativos, centavos, campos ausentes, datas/opções e relacionamentos inválidos. Isso amplia a cobertura da rodada manual, sem afirmar que todas as entradas possíveis foram testadas.
+- **Relatórios adicionais:** os recursos identificados são painel e recibo. Outros relatórios dependem de um requisito específico; não são considerados implementados apenas pelo nome dessa pendência.
+- **Concorrência/carga:** existem cenários automatizados de agenda, estoque e cache. Eles não equivalem a um teste de carga ou stress.
+- **11 rotas sem token:** a planilha registra 401 em todas. Essa evidência manual não deve ser somada às suítes automatizadas como se fossem casos distintos.
+
+A planilha não comprova uma revisão visual completa nem a execução do Docker; essas etapas permanecem separadas.
 
 ## 14. Alternativa com Docker
 
@@ -586,7 +614,7 @@ Qualquer configuração específica está descrita nas seções 5, 6 e 7. Nenhum
 - O pacote é para execução acadêmica local; não há implantação externa nem teste de carga.
 - A execução via Docker está preparada, mas ainda não foi homologada.
 - Não há Swagger UI; só o contrato OpenAPI em JSON.
-- O cache é local a uma instância da API e merece um teste de leitura simultânea com gravação.
+- O cache é local a uma instância da API. A invalidação concorrente tem testes de regressão; múltiplas instâncias e escritas externas ao servidor exigem outra estratégia.
 
 ## 17. Divisão de responsabilidades
 
@@ -598,3 +626,4 @@ Qualquer configuração específica está descrita nas seções 5, 6 e 7. Nenhum
 | Adla | Testes, checklist de requisitos e roteiro de apresentação |
 
 **Histórico do repositório.** A base da API (estrutura em camadas e os CRUDs de Pacientes e Consultas) foi iniciada pela Bruna em https://github.com/Bruna-ap/OdontoCare-API. Esse código foi baixado e integrado ao repositório principal pelo Daniel, que por isso concentra os commits iniciais. Os commits seguintes de documentação e revisão são feitos pelos demais integrantes neste mesmo repositório.
+

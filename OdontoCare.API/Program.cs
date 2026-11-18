@@ -1,6 +1,8 @@
 using OdontoCare.API.Extensions;
 using OdontoCare.API.Middleware;
 using OdontoCare.Application.Common;
+using Microsoft.AspNetCore.Mvc.Infrastructure;
+using OdontoCare.API.Results;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllers().ConfigureApiBehaviorOptions(options =>
@@ -13,6 +15,7 @@ builder.Services.AddControllers().ConfigureApiBehaviorOptions(options =>
         return new Microsoft.AspNetCore.Mvc.BadRequestObjectResult(ResultWrapper<object>.ValidationError(erros));
     };
 });
+builder.Services.AddSingleton<IClientErrorFactory, ResultWrapperClientErrorFactory>();
 builder.Services.AddOpenApi();
 builder.Services.AddOdontoCare(builder.Configuration);
 

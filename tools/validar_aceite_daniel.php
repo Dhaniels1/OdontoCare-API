@@ -26,4 +26,18 @@ wrapped('Dentista le pacientes',raw('GET','api/pacientes',null,$dentist),200);
 wrapped('Dentista nao altera paciente: envelope 403',raw('PUT','api/pacientes/'.$patient['idPaciente'],['nome'=>'Proibido'],$dentist),403);
 wrapped('Senha incorreta: envelope 401',raw('POST','api/auth/login',['identificador'=>$login,'senha'=>'Senha incorreta']),401);
 if(getenv('ODONTOCARE_API_FALHA_URL')){$r=raw('POST','api/auth/login',['identificador'=>'teste indisponibilidade','senha'=>$password],null,rtrim(getenv('ODONTOCARE_API_FALHA_URL'),'/'));wrapped('Falha de banco: envelope 500',$r,500);note('Erro 500 nao divulga stack ou conexao',!preg_match('/SQLSTATE|StackTrace|MySqlException|Password=|ConnectionString| at OdontoCare/',$r['raw'])&&str_contains($r['json']['message']??'','erro interno'));}
+// Envia corpo cru para exercitar os filtros do MVC, antes de chegar ao controller.
+function rawContentType($contentType, $body) {
+    global $base;
+    $h=curl_init($base.'/api/auth/login');
+    curl_setopt_array($h,[CURLOPT_POST=>true,CURLOPT_RETURNTRANSFER=>true,CURLOPT_TIMEOUT=>15,
+        CURLOPT_HTTPHEADER=>['Accept: application/json','Content-Type: '.$contentType],CURLOPT_POSTFIELDS=>$body]);
+    $text=curl_exec($h);$code=curl_getinfo($h,CURLINFO_HTTP_CODE);$type=curl_getinfo($h,CURLINFO_CONTENT_TYPE);
+    curl_close($h);
+    return ['code'=>$code,'json'=>is_string($text)?json_decode($text,true):null,'type'=>$type??'','raw'=>$text?:''];
+}
+foreach(['text/plain','application/xml','application/octet-stream','invalido','application/json; charset=unsupported'] as $contentType) {
+    wrapped('Content-Type incompatível mantém envelope 415: '.$contentType,rawContentType($contentType,'{}'),415);
+}
+wrapped('JSON malformado mantém envelope 400',rawContentType('application/json','{invalido'),400);
 $out=['database'=>$db->query('SELECT VERSION()')->fetchColumn(),'results'=>$results];if(getenv('ODONTOCARE_VALIDACAO_RESULTADO'))file_put_contents(getenv('ODONTOCARE_VALIDACAO_RESULTADO'),json_encode($out,JSON_PRETTY_PRINT|JSON_UNESCAPED_UNICODE));exit(count(array_filter($results,fn($r)=>!$r['passed']))?1:0);

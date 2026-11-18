@@ -44,4 +44,9 @@ $material=wrapped('Entrada acima do minimo',raw('POST',"api/materiais/$mid/entra
 $material=wrapped('Saida ate o minimo',raw('POST',"api/materiais/$mid/saidas",['quantidade'=>1],$secretary),200);note('No minimo gera alerta',$material['estoqueBaixo']);
 wrapped('Secretaria nao exclui material',raw('DELETE',"api/materiais/$mid",null,$secretary),403);
 $empty=wrapped('Outro material vazio',raw('POST','api/materiais',$m,$admin),201)['idMaterial'];wrapped('Excluir material sem historico',raw('DELETE',"api/materiais/$empty",null,$admin),200);wrapped('Material excluido 404',raw('GET',"api/materiais/$empty",null,$admin),404);
+// Cobertura da pendência de DELETE registrada no relatório de QA da Adla.
+wrapped('Dentista nao exclui consulta',raw('DELETE','api/consultas/'.$c['idConsulta'],null,$dentist),403);
+wrapped('Secretaria cancela consulta por DELETE',raw('DELETE','api/consultas/'.$c['idConsulta'],null,$secretary),200);
+$cancelada=wrapped('DELETE preserva consulta para leitura',raw('GET','api/consultas/'.$c['idConsulta'],null,$admin),200);
+note('DELETE persiste cancelamento logico',$cancelada['statusConsulta']==='Cancelada');
 $out=['database'=>$db->query('SELECT VERSION()')->fetchColumn(),'results'=>$results];if(getenv('ODONTOCARE_VALIDACAO_RESULTADO'))file_put_contents(getenv('ODONTOCARE_VALIDACAO_RESULTADO'),json_encode($out,JSON_PRETTY_PRINT|JSON_UNESCAPED_UNICODE));exit(count(array_filter($results,fn($r)=>!$r['passed']))?1:0);

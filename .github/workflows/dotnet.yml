@@ -17,3 +17,5 @@ jobs:
       - name: Architecture boundaries
         shell: pwsh
         run: ./tools/verificar_arquitetura.ps1
+      - name: Cache concurrency regression
+        run: dotnet run --no-build --configuration Release --project tools/CacheRegression

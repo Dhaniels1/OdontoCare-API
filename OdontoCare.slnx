@@ -3,4 +3,5 @@
   <Project Path="OdontoCare.Application/OdontoCare.Application.csproj" />
   <Project Path="OdontoCare.Domain/OdontoCare.Domain.csproj" />
   <Project Path="OdontoCare.Infrastructure/OdontoCare.Infrastructure.csproj" />
+  <Project Path="tools/CacheRegression/CacheRegression.csproj" />
 </Solution>
