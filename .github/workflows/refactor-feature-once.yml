@@ -17,6 +17,16 @@ jobs:
           dotnet-version: '10.0.x'
       - name: Reorganizar namespaces e pastas
         run: python3 tools/_refactor_feature_once.py
+      - name: Preservar top-level statements dos testes de cache
+        run: |
+          python3 - <<'PY'
+          import subprocess
+          from pathlib import Path
+          path = Path('tools/CacheRegression/Program.cs')
+          original = subprocess.check_output(['git','show','HEAD:tools/CacheRegression/Program.cs'], text=True)
+          original = original.replace('using OdontoCare.Application.DTOs;', 'using OdontoCare.Application.Features.Estoque.DTOs;')
+          path.write_text(original, encoding='utf-8')
+          PY
       - name: Compilar solucao completa
         run: dotnet build OdontoCare.slnx -c Release
       - name: Verificar Clean Architecture e tipo por arquivo
