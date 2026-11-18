@@ -10,7 +10,9 @@ public sealed class ExceptionMiddleware(RequestDelegate next, ILogger<ExceptionM
         try { await next(ctx); }
         catch (Exception exception) when (!ctx.Response.HasStarted)
         {
-            logger.LogError(exception, "Erro na API. TraceId: {TraceId}", ctx.TraceIdentifier);
+            var nivel = exception is BusinessException or DbUpdateException
+                ? LogLevel.Warning : LogLevel.Error;
+            logger.Log(nivel, exception, "Erro na API. TraceId: {TraceId}", ctx.TraceIdentifier);
             var codigo = exception switch
             {
                 BusinessException b => b.StatusCode,

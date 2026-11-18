@@ -1,5 +1,7 @@
 using System.Text;
+using System.Threading.RateLimiting;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using OdontoCare.API.Security;
@@ -27,7 +29,10 @@ public static class DependencyInjection
         services.AddSingleton(new HorarioClinica(
             TimeSpan.Parse(configuration["Clinica:HorarioInicio"] ?? "08:00"),
             TimeSpan.Parse(configuration["Clinica:HorarioFim"] ?? "18:00")));
-        services.AddScoped<FinanceiroService>();
+        services.AddScoped<IProcedimentoService, ProcedimentoService>();
+        services.AddScoped<IOrcamentoService, OrcamentoService>();
+        services.AddScoped<IPagamentoService, PagamentoService>();
+        services.AddScoped<IPainelService, PainelService>();
         services.AddScoped<IPacienteService, PacienteService>();
         services.AddScoped<IConsultaLookupService, ConsultaLookupService>();
         services.AddScoped<IConsultaService, ConsultaService>();
@@ -77,6 +82,24 @@ public static class DependencyInjection
                 };
             });
         services.AddAuthorization();
+
+        // Limita tentativas de login por IP (mitiga força bruta). Configurável: RateLimit:LoginPorMinuto.
+        var limiteLogin = configuration.GetValue("RateLimit:LoginPorMinuto", 20);
+        services.AddRateLimiter(options =>
+        {
+            options.OnRejected = async (ctx, ct) =>
+            {
+                ctx.HttpContext.Response.StatusCode = StatusCodes.Status429TooManyRequests;
+                await ctx.HttpContext.Response.WriteAsJsonAsync(
+                    ResultWrapper<object>.Failure("Muitas tentativas de login. Aguarde um minuto e tente novamente."), ct);
+            };
+            options.AddPolicy("login", http => RateLimitPartition.GetFixedWindowLimiter(
+                http.Connection.RemoteIpAddress?.ToString() ?? "desconhecido",
+                _ => new FixedWindowRateLimiterOptions
+                {
+                    PermitLimit = limiteLogin, Window = TimeSpan.FromMinutes(1), QueueLimit = 0
+                }));
+        });
         return services;
     }
 }

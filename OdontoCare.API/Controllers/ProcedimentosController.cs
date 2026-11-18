@@ -3,27 +3,26 @@ using Microsoft.AspNetCore.Mvc;
 using OdontoCare.Application.Common;
 using OdontoCare.Application.DTOs;
 using OdontoCare.Application.Security;
-using OdontoCare.Application.Services;
-using OdontoCare.Domain.Entities;
+using OdontoCare.Application.Interfaces;
 namespace OdontoCare.API.Controllers;
 [ApiController, Route("api/procedimentos"), Authorize(Roles = Roles.Todos)]
-public sealed class ProcedimentosController(FinanceiroService service) : ControllerBase
+public sealed class ProcedimentosController(IProcedimentoService service) : ControllerBase
 {
     [HttpGet]
-    public async Task<IActionResult> Listar() => Ok(ResultWrapper<List<Procedimento>>.Ok(await service.ProcedimentosAsync()));
+    public async Task<IActionResult> Listar() => Ok(ResultWrapper<List<ProcedimentoDetalheDto>>.Ok(await service.ListarAsync()));
     [HttpGet("{id:int}")]
-    public async Task<IActionResult> Buscar(int id) => await service.ProcedimentoAsync(id) is { } item
-        ? Ok(ResultWrapper<Procedimento>.Ok(item)) : NotFound(ResultWrapper<object>.NotFound("Registro não encontrado."));
+    public async Task<IActionResult> Buscar(int id) => await service.BuscarAsync(id) is { } item
+        ? Ok(ResultWrapper<ProcedimentoDetalheDto>.Ok(item)) : NotFound(ResultWrapper<object>.NotFound("Registro não encontrado."));
     [HttpPost, Authorize(Roles = Roles.Gestao)]
     public async Task<IActionResult> Criar(ProcedimentoGravarDto dto)
     {
-        var item=(await service.GravarProcedimentoAsync(null,dto))!;
-        return CreatedAtAction(nameof(Buscar), new { id=item.IdProcedimento }, ResultWrapper<Procedimento>.Ok(item));
+        var item=(await service.GravarAsync(null,dto))!;
+        return CreatedAtAction(nameof(Buscar), new { id=item.IdProcedimento }, ResultWrapper<ProcedimentoDetalheDto>.Ok(item));
     }
     [HttpPut("{id:int}"), Authorize(Roles = Roles.Gestao)]
-    public async Task<IActionResult> Atualizar(int id, ProcedimentoGravarDto dto) => await service.GravarProcedimentoAsync(id,dto) is { } item
-        ? Ok(ResultWrapper<Procedimento>.Ok(item)) : NotFound(ResultWrapper<object>.NotFound("Registro não encontrado."));
+    public async Task<IActionResult> Atualizar(int id, ProcedimentoGravarDto dto) => await service.GravarAsync(id,dto) is { } item
+        ? Ok(ResultWrapper<ProcedimentoDetalheDto>.Ok(item)) : NotFound(ResultWrapper<object>.NotFound("Registro não encontrado."));
     [HttpDelete("{id:int}"), Authorize(Roles = Roles.Gestao)]
-    public async Task<IActionResult> Excluir(int id) => await service.ExcluirProcedimentoAsync(id)
+    public async Task<IActionResult> Excluir(int id) => await service.ExcluirAsync(id)
         ? Ok(ResultWrapper<object>.Ok(null,"Registro excluído.")) : NotFound(ResultWrapper<object>.NotFound("Registro não encontrado."));
 }

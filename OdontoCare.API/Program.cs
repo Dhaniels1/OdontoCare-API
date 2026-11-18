@@ -24,11 +24,18 @@ app.UseMiddleware<ExceptionMiddleware>();
 app.UseStatusCodePages(async context =>
 {
     var response = context.HttpContext.Response;
-    if (!response.HasStarted && context.HttpContext.Request.Path.StartsWithSegments("/api"))
-        await response.WriteAsJsonAsync(ResultWrapper<object>.Failure("Recurso não encontrado."));
+    if (response.HasStarted || !context.HttpContext.Request.Path.StartsWithSegments("/api")) return;
+    var mensagem = response.StatusCode switch
+    {
+        StatusCodes.Status404NotFound => "Recurso não encontrado.",
+        StatusCodes.Status403Forbidden => "Você não tem permissão para esta operação.",
+        _ => "Requisição inválida."
+    };
+    await response.WriteAsJsonAsync(ResultWrapper<object>.Failure(mensagem));
 });
 if (app.Environment.IsDevelopment()) app.MapOpenApi(); // /openapi/v1.json
 app.UseHttpsRedirection();
+app.UseRateLimiter();
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();

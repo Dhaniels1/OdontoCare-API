@@ -1,18 +1,13 @@
-
-using OdontoCare.Domain.Entities;
+using OdontoCare.Application.DTOs;
 
 namespace OdontoCare.Application.Interfaces;
 
 public interface IConsultaService
 {
-    Task<List<Consulta>> GetTodasAsync();
-
-    Task<Consulta?> GetPorIdAsync(int id);
-
-    Task<Consulta> CriarAsync(Consulta consulta);
-
-    Task<bool> AtualizarAsync(int id, Consulta consulta);
-
+    Task<List<ConsultaDto>> GetTodasAsync();
+    Task<ConsultaDto?> GetPorIdAsync(int id);
+    Task<ConsultaDto> CriarAsync(ConsultaCreateDto dto);
+    Task<bool> AtualizarAsync(int id, ConsultaUpdateDto dto);
     Task<bool> ExcluirAsync(int id);
     Task<bool> CancelarAsync(int id);
 }

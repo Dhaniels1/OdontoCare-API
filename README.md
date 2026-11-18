@@ -115,6 +115,10 @@ A API segue **Clean Architecture**. A ideia central é a regra de dependência: 
 
 ### Decisões de projeto
 
+- **Controllers só conhecem DTOs.** Entidades do Domain nunca saem da Application: os serviços recebem e devolvem DTOs (`Mappings/EntityMappings.cs`), e o script `tools/verificar_arquitetura.ps1` falha se um controller referenciar `OdontoCare.Domain`.
+- **Serviços coesos por interface.** `IPacienteService`, `IConsultaService`, `IProcedimentoService`, `IOrcamentoService`, `IPagamentoService`, `IPainelService` e `IMaterialService`, cada um com a sua implementação.
+- **Login protegido contra força bruta.** Limite de tentativas por IP (`RateLimit:LoginPorMinuto`, padrão 20) com resposta 429 no formato ResultWrapper, e verificação de senha em tempo semelhante quando o usuário não existe.
+
 - **Repositório genérico atrás de interface.** Os serviços da Application dependem de `IEntityRepository<T>`, nunca do `DbContext`. Isso deixa a regra de negócio isolada do banco e fácil de trocar ou simular em testes.
 - **Injeção de dependências** configurada num único lugar (`AddOdontoCare`), para os controllers receberem só interfaces e serviços.
 - **DTOs com validação** (`[Required]`, `[MaxLength]`, `[Range]`...) na entrada, para a API recusar dado ruim antes de chegar na regra.

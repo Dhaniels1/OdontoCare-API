@@ -1,19 +1,12 @@
-
-using OdontoCare.Domain.Entities;
+using OdontoCare.Application.DTOs;
 
 namespace OdontoCare.Application.Interfaces;
 
 public interface IPacienteService
 {
-    Task<List<Paciente>> GetTodosAsync();
-
-    Task<Paciente?> GetPorIdAsync(int id);
-
-    Task<Paciente> CriarAsync(Paciente paciente);
-
-    Task<bool> AtualizarAsync(int id, Paciente paciente);
-
+    Task<List<PacienteResponseDto>> GetTodosAsync();
+    Task<PacienteResponseDto?> GetPorIdAsync(int id);
+    Task<PacienteResponseDto> CriarAsync(PacienteCreateDto dto);
+    Task<PacienteResponseDto?> AtualizarAsync(int id, PacienteUpdateDto dto);
     Task<bool> ExcluirAsync(int id);
-
-    Task<bool> CpfExisteAsync(string cpf);
 }

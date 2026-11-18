@@ -4,7 +4,6 @@ using OdontoCare.Application.Common;
 using OdontoCare.Application.DTOs;
 using OdontoCare.Application.Interfaces;
 using OdontoCare.Application.Security;
-using OdontoCare.Domain.Entities;
 
 namespace OdontoCare.API.Controllers;
 
@@ -15,18 +14,6 @@ public sealed class ConsultasController(IConsultaService service, IConsultaLooku
 {
     private bool SoProprias => User.IsInRole(Roles.Dentista);
     private int UsuarioId => int.TryParse(User.FindFirst("sub")?.Value, out var id) ? id : 0;
-    private static Consulta Map(ConsultaCreateDto d) => new()
-    {
-        DataConsulta = d.DataConsulta, HorarioConsulta = d.HorarioConsulta,
-        StatusConsulta = d.StatusConsulta, Observacoes = d.Observacoes,
-        IdUsuario = d.IdUsuario, IdPaciente = d.IdPaciente, IdProcedimento = d.IdProcedimento
-    };
-    private static Consulta Map(ConsultaUpdateDto d) => new()
-    {
-        DataConsulta = d.DataConsulta, HorarioConsulta = d.HorarioConsulta,
-        StatusConsulta = d.StatusConsulta, Observacoes = d.Observacoes,
-        IdUsuario = d.IdUsuario, IdPaciente = d.IdPaciente, IdProcedimento = d.IdProcedimento
-    };
 
     [HttpGet]
     public async Task<IActionResult> GetTodas()
@@ -41,23 +28,23 @@ public sealed class ConsultasController(IConsultaService service, IConsultaLooku
         var c = await service.GetPorIdAsync(id);
         if (c is null || (SoProprias && c.IdUsuario != UsuarioId))
             return NotFound(ResultWrapper<object>.NotFound("Consulta não encontrada."));
-        return Ok(ResultWrapper<Consulta>.Ok(c));
+        return Ok(ResultWrapper<ConsultaDto>.Ok(c));
     }
 
     [Authorize(Roles = Roles.Gestao)]
     [HttpPost]
     public async Task<IActionResult> Criar([FromBody] ConsultaCreateDto dados)
     {
-        var criada = await service.CriarAsync(Map(dados));
+        var criada = await service.CriarAsync(dados);
         return CreatedAtAction(nameof(GetPorId), new { id = criada.IdConsulta },
-            ResultWrapper<Consulta>.Ok(criada, "Consulta cadastrada."));
+            ResultWrapper<ConsultaDto>.Ok(criada, "Consulta cadastrada."));
     }
 
     [Authorize(Roles = Roles.Gestao)]
     [HttpPut("{id:int}")]
     public async Task<IActionResult> Atualizar(int id, [FromBody] ConsultaUpdateDto dados)
     {
-        var ok = await service.AtualizarAsync(id, Map(dados));
+        var ok = await service.AtualizarAsync(id, dados);
         return ok ? Ok(ResultWrapper<object>.Ok(null, "Consulta atualizada.")) :
             NotFound(ResultWrapper<object>.NotFound("Consulta não encontrada."));
     }

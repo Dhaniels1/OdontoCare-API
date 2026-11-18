@@ -1,24 +1,30 @@
 using OdontoCare.Application.Common;
+using OdontoCare.Application.DTOs;
 using OdontoCare.Application.Interfaces;
+using OdontoCare.Application.Mappings;
 using OdontoCare.Domain.Entities;
 namespace OdontoCare.Application.Services;
 public sealed class ConsultaService(IEntityRepository<Consulta> consultas, IEntityRepository<Paciente> pacientes,
     IEntityRepository<Usuario> usuarios, IEntityRepository<Procedimento> procedimentos,
     IAgendaLock agenda, HorarioClinica horario) : IConsultaService
 {
-    public Task<List<Consulta>> GetTodasAsync() => consultas.ListarAsync();
-    public Task<Consulta?> GetPorIdAsync(int id) => consultas.BuscarAsync(c => c.IdConsulta == id);
-    public async Task<Consulta> CriarAsync(Consulta consulta)
+    public async Task<List<ConsultaDto>> GetTodasAsync() =>
+        (await consultas.ListarAsync()).Select(c => c.ToDto()).ToList();
+    public async Task<ConsultaDto?> GetPorIdAsync(int id) => (await BuscarEntidadeAsync(id))?.ToDto();
+    private Task<Consulta?> BuscarEntidadeAsync(int id) => consultas.BuscarAsync(c => c.IdConsulta == id);
+    public async Task<ConsultaDto> CriarAsync(ConsultaCreateDto dto)
     {
+        var consulta = dto.ToEntity();
         await using var tx = await agenda.IniciarAsync();
         await ValidarAsync(consulta, null);
         consultas.Adicionar(consulta); await consultas.SalvarAsync(); await tx.CommitAsync();
-        return consulta;
+        return consulta.ToDto();
     }
-    public async Task<bool> AtualizarAsync(int id, Consulta dados)
+    public async Task<bool> AtualizarAsync(int id, ConsultaUpdateDto dto)
     {
+        var dados = dto.ToEntity();
         await using var tx = await agenda.IniciarAsync();
-        var c = await GetPorIdAsync(id); if (c is null) return false;
+        var c = await BuscarEntidadeAsync(id); if (c is null) return false;
         await ValidarAsync(dados, id);
         c.DataConsulta=dados.DataConsulta; c.HorarioConsulta=dados.HorarioConsulta;
         c.StatusConsulta=dados.StatusConsulta; c.Observacoes=dados.Observacoes;
@@ -27,7 +33,7 @@ public sealed class ConsultaService(IEntityRepository<Consulta> consultas, IEnti
     }
     public async Task<bool> ExcluirAsync(int id)
     {
-        var c=await GetPorIdAsync(id); if(c is null) return false;
+        var c=await BuscarEntidadeAsync(id); if(c is null) return false;
         c.StatusConsulta="Cancelada"; await consultas.SalvarAsync(); return true;
     }
     public Task<bool> CancelarAsync(int id) => ExcluirAsync(id);

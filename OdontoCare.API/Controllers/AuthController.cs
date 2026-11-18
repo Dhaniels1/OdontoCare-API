@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using OdontoCare.Application.Common;
 using OdontoCare.Application.DTOs;
 using OdontoCare.Application.Interfaces;
@@ -12,6 +13,7 @@ namespace OdontoCare.API.Controllers;
 public sealed class AuthController(IAuthService service) : ControllerBase
 {
     [AllowAnonymous]
+    [EnableRateLimiting("login")]
     [HttpPost("login")]
     public async Task<IActionResult> Login([FromBody] LoginDto dados)
     {

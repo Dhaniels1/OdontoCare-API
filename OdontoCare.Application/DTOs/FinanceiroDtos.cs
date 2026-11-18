@@ -40,5 +40,5 @@ public sealed record ReciboDto(PagamentoResponseDto Pagamento, string Cpf);
 public sealed record ProcedimentoResumoDto(string NomeProcedimento, int Total);
 public sealed record PainelDto(int TotalPacientes, int TotalConsultas, int TotalProcedimentos, int TotalPagamentos,
     int TotalMateriais, int ConsultasHoje, decimal ValorRecebido, decimal ValorPendente, decimal ValorCancelado,
-    List<OdontoCare.Domain.Entities.Material> MateriaisBaixoEstoque,
+    List<MaterialDto> MateriaisBaixoEstoque,
     List<ProcedimentoResumoDto> DadosProcedimentos, List<ConsultaListaDto> ProximasConsultas);
