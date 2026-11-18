@@ -135,6 +135,7 @@ A API segue **Clean Architecture**. A ideia central é a regra de dependência: 
 - Criação: executar, **nesta ordem**, os scripts da pasta `database`:
   1. `database/odontocare.sql`
   2. `database/02_migracao_estoque.sql`
+  3. `database/03_login_unico.sql` (idempotente: reforça `UNIQUE(login)` em instalações antigas)
 - Os scripts não trazem dados de demonstração nem senhas. O primeiro usuário (Administrador) é criado por um utilitário (passo 6.2).
 - Tabelas principais: `usuario`, `paciente`, `consulta`, `procedimento`, `orcamento`, `pagamento`, `material`, `equipamento` e `movimentacao_estoque`.
 - A conexão é informada pela variável de ambiente `ConnectionStrings__OdontoCare` (nada de senha dentro do repositório).
@@ -170,6 +171,8 @@ cd OdontoCare-API
 ```
 
 **2) Preparar o banco.** No MySQL Workbench, execute `database/odontocare.sql` e depois `database/02_migracao_estoque.sql`. Use uma instalação de desenvolvimento, sem um banco `odontocare` que precise ser preservado.
+
+**Atenção em bancos existentes:** o `CREATE TABLE IF NOT EXISTS` não altera uma tabela já criada. Execute `database/03_login_unico.sql` para criar a restrição única de login. Antes, verifique duplicidades com `SELECT login, COUNT(*) FROM usuario GROUP BY login HAVING COUNT(*) > 1;` e resolva eventuais conflitos manualmente; a migração não remove contas nem senhas.
 
 **3) Criar o primeiro administrador.** Em um terminal separado:
 
@@ -227,6 +230,8 @@ php -d "session.save_path=$sessionDir" -S 127.0.0.1:58080 -t OdontoCare-main
 ```
 
 Abra **http://127.0.0.1:58080/login.php** e entre com a conta criada no passo 6.2. O cliente só precisa saber a URL da API (`ODONTOCARE_API_URL`). Para parar, `Ctrl+C` em cada terminal; os dados continuam no MySQL.
+
+**Segurança do prontuário no cliente PHP.** A Secretária vê e edita apenas campos cadastrais. O formulário do Administrador carrega campos clínicos por uma segunda requisição à rota protegida e evita salvar com dados clínicos incompletos se ela falhar. O Dentista pode consultar o prontuário em uma tela somente de leitura quando existe consulta vinculada ao paciente. O cliente exibe a lista de erros de validação retornada no `ResultWrapper` e usa uma página amigável para erros HTTP.
 
 **Como o cliente conversa com a API.** As telas continuam chamando as classes `*Dao.php`, mas elas agora não tocam no banco: usam `api/DadosApi.php` e `api/ApiClient.php` para fazer a requisição HTTP. No login, o PHP guarda o JWT na sessão e passa a mandar `Authorization: Bearer <token>` em todas as chamadas. Se a API responder 401, o cliente descarta o token e volta para o login. Formulários têm proteção CSRF (`config/seguranca.php`).
 
@@ -288,8 +293,10 @@ Guardadas com **PBKDF2-SHA256 e salt individual**. A senha em texto puro nunca �
 | Perfil | O que pode fazer |
 |---|---|
 | **Administrador** | Tudo, incluindo cadastrar, alterar e remover usuários e excluir materiais e equipamentos |
-| **Secretária** | Cadastrar, alterar e excluir pacientes, consultas, procedimentos, orçamentos e pagamentos; cadastrar e alterar materiais/equipamentos e movimentar estoque. Não pode excluir materiais ou equipamentos nem gerenciar contas de usuários. |
-| **Dentista** | Somente leitura; na agenda enxerga **apenas as próprias consultas** |
+| **Secretária** | Cadastrar, alterar e excluir dados cadastrais de pacientes, consultas, procedimentos, orçamentos e pagamentos; cadastrar e alterar materiais/equipamentos e movimentar estoque. **Não pode visualizar nem modificar dados clínicos**. Não pode excluir materiais ou equipamentos nem gerenciar usuários. |
+| **Dentista** | Somente leitura; na agenda e na lista de pacientes enxerga **apenas os vinculados às suas consultas**. Pode consultar o prontuário desses pacientes, mas não alterá-lo. |
+
+**Prontuário separado por privilégio mínimo:** `GET /api/pacientes` e `GET /api/pacientes/{id}` fornecem apenas dados cadastrais, sem histórico odontológico, alergias, exames, tratamentos anteriores ou prontuário digital. O endpoint `GET /api/pacientes/{id}/prontuario` é exclusivo de Administrador e Dentista; para Dentista, a API verifica o vínculo com alguma consulta do paciente e retorna 404 se não existir. Apenas Administrador pode escrever campos clínicos no `POST/PUT /api/pacientes`. A Secretária pode atualizar cadastro, mas enviar um campo clínico nesse corpo retorna 403, e suas edições não apagam os valores clínicos já salvos. A rota clínica desabilita cache HTTP.
 
 ## 10. Estratégia de cache
 
@@ -330,8 +337,9 @@ Todas as rotas ficam sob `/api`. **Leitura** = qualquer usuário autenticado; **
 | GET | `/api/usuarios/{id}` | Busca usuário | Admin |
 | PUT | `/api/usuarios/{id}` | Atualiza usuário | Admin |
 | DELETE | `/api/usuarios/{id}` | Remove usuário | Admin |
-| GET | `/api/pacientes` | Lista pacientes | Leitura |
-| GET | `/api/pacientes/{id}` | Busca paciente | Leitura |
+| GET | `/api/pacientes` | Lista dados cadastrais (Dentista: apenas vinculados) | Leitura |
+| GET | `/api/pacientes/{id}` | Busca dados cadastrais do paciente (Dentista: apenas vinculados) | Leitura |
+| GET | `/api/pacientes/{id}/prontuario` | Busca campos clínicos | Administrador ou Dentista vinculado |
 | POST | `/api/pacientes` | Cadastra paciente | Gestão |
 | PUT | `/api/pacientes/{id}` | Atualiza paciente | Gestão |
 | DELETE | `/api/pacientes/{id}` | Remove paciente | Gestão |
@@ -631,3 +639,7 @@ Qualquer configuração específica está descrita nas seções 5, 6 e 7. Nenhum
 
 **Histórico do repositório.** A base da API (estrutura em camadas e os CRUDs de Pacientes e Consultas) foi iniciada pela Bruna em https://github.com/Bruna-ap/OdontoCare-API. Esse código foi baixado e integrado ao repositório principal pelo Daniel, que por isso concentra os commits iniciais. Os commits seguintes de documentação e revisão são feitos pelos demais integrantes neste mesmo repositório.
 
+
+### Auditoria de limpeza do repositório (18/11/2026)
+
+Foi feita revisão das referências: as pastas `OdontoCare-main/dao`, `model` e `controller` ainda participam do fluxo PHP (apesar dos nomes legados). `tools/` e `qa/` comprovam requisitos e testes; Docker, SQL e arquivos `.http` são auxiliares da entrega. **Não foram excluídos arquivos sem evidência suficiente de desuso.** O `.gitignore` já descarta `bin/`, `obj/`, `.env`, logs e resultados temporários. A segurança da entrega tem prioridade sobre a redução artificial de arquivos.

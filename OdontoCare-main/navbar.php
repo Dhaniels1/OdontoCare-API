@@ -109,4 +109,12 @@ include_once "permissao.php";
     </div>
 
 </nav>
+<?php
+require_once __DIR__ . '/api/mensagens.php';
+if (session_status() === PHP_SESSION_ACTIVE) {
+    echo '<div class="container mt-3">';
+    exibirMensagens();
+    echo '</div>';
+}
+?>
 

@@ -47,11 +47,11 @@ if (isset($_POST["btGravar"])) {
         $_POST["txtCidade"],
         $_POST["txtEstado"],
         $_POST["txtDataNascimento"],
-        $_POST["txtHistoricoOdontologico"],
-        $_POST["txtAlergias"],
-        $_POST["txtExames"],
-        $_POST["txtTratamentosAnteriores"],
-        $_POST["txtProntuarioClinicoDigital"]
+        ($_POST["txtHistoricoOdontologico"] ?? ""),
+        ($_POST["txtAlergias"] ?? ""),
+        ($_POST["txtExames"] ?? ""),
+        ($_POST["txtTratamentosAnteriores"] ?? ""),
+        ($_POST["txtProntuarioClinicoDigital"] ?? "")
     );
 
     $pacienteDao = new PacienteDao();

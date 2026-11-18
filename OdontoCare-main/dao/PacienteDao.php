@@ -6,8 +6,10 @@ class PacienteDao
     public function __construct() { $this->api = new PacienteApi(); }
     private function payload(Paciente $p): array
     {
-        $keys = ['nome','cpf','telefone','email','cep','logradouro','numero','bairro','cidade','estado',
-            'dataNascimento','historicoOdontologico','alergias','exames','tratamentosAnteriores','prontuarioClinicoDigital'];
+        $keys = ['nome','cpf','telefone','email','cep','logradouro','numero','bairro','cidade','estado','dataNascimento'];
+        if (($_SESSION['tipoUsuario'] ?? '') === 'Administrador') {
+            array_push($keys, 'historicoOdontologico', 'alergias', 'exames', 'tratamentosAnteriores', 'prontuarioClinicoDigital');
+        }
         $d = [];
         foreach ($keys as $key) $d[$key] = (string)($p->$key ?? '');
         return $d;
@@ -31,6 +33,15 @@ class PacienteDao
         $dados = $r['dados'];
         if (!empty($dados['dataNascimento'])) $dados['dataNascimento'] = substr($dados['dataNascimento'], 0, 10);
         return $dados;
+    }
+    public function readProntuario($id): array|false
+    {
+        $r = ApiClient::requisitar('GET', 'api/pacientes/' . (int)$id . '/prontuario');
+        if (!$r['sucesso']) {
+            $_SESSION['erro'] = $r['mensagem'];
+            return false;
+        }
+        return $r['dados'];
     }
     public function update(Paciente $p): bool
     {

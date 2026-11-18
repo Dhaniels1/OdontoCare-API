@@ -138,7 +138,8 @@ CREATE TABLE IF NOT EXISTS `usuario` (
   `login` varchar(50) NOT NULL,
   `senha` varchar(500) NOT NULL,
   `tipoUsuario` varchar(50) DEFAULT NULL,
-  PRIMARY KEY (`idUsuario`)
+  PRIMARY KEY (`idUsuario`),
+  UNIQUE KEY `uq_usuario_login` (`login`)
 ) ENGINE=InnoDB AUTO_INCREMENT=7 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- Exportação de dados foi desmarcado.
