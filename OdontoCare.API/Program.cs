@@ -1,8 +1,8 @@
+using Microsoft.AspNetCore.Mvc.Infrastructure;
 using OdontoCare.API.Extensions;
 using OdontoCare.API.Middleware;
-using OdontoCare.Application.Common;
-using Microsoft.AspNetCore.Mvc.Infrastructure;
 using OdontoCare.API.Results;
+using OdontoCare.Application.Common.Models;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllers().ConfigureApiBehaviorOptions(options =>

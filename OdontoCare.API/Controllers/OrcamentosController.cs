@@ -1,9 +1,10 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using OdontoCare.Application.Common;
-using OdontoCare.Application.DTOs;
-using OdontoCare.Application.Security;
-using OdontoCare.Application.Interfaces;
+using OdontoCare.Application.Common.Models;
+using OdontoCare.Application.Common.Security;
+using OdontoCare.Application.Features.Financeiro.DTOs;
+using OdontoCare.Application.Features.Financeiro.Interfaces;
+
 namespace OdontoCare.API.Controllers;
 [ApiController, Route("api/orcamentos"), Authorize(Roles = Roles.Todos)]
 public sealed class OrcamentosController(IOrcamentoService service) : ControllerBase

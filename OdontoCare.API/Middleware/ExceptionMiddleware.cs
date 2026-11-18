@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
-using OdontoCare.Application.Common;
+using OdontoCare.Application.Common.Exceptions;
+using OdontoCare.Application.Common.Models;
 
 namespace OdontoCare.API.Middleware;
 

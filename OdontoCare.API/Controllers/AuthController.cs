@@ -1,10 +1,10 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
-using OdontoCare.Application.Common;
-using OdontoCare.Application.DTOs;
-using OdontoCare.Application.Interfaces;
-using OdontoCare.Application.Security;
+using OdontoCare.Application.Common.Models;
+using OdontoCare.Application.Common.Security;
+using OdontoCare.Application.Features.Auth.DTOs;
+using OdontoCare.Application.Features.Auth.Interfaces;
 
 namespace OdontoCare.API.Controllers;
 

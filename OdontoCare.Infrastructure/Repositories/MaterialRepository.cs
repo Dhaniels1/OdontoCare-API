@@ -1,6 +1,6 @@
 using Microsoft.EntityFrameworkCore;
-using OdontoCare.Application.Common;
-using OdontoCare.Application.Interfaces;
+using OdontoCare.Application.Common.Exceptions;
+using OdontoCare.Application.Features.Estoque.Interfaces;
 using OdontoCare.Domain.Entities;
 using OdontoCare.Infrastructure.Data;
 

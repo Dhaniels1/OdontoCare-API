@@ -1,18 +1,28 @@
-using System.Text;
-using System.Threading.RateLimiting;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
-using OdontoCare.API.Security;
-using OdontoCare.Application.Common;
-using OdontoCare.Application.Interfaces;
-using OdontoCare.Application.Services;
+using OdontoCare.Application.Common.Interfaces;
+using OdontoCare.Application.Common.Models;
+using OdontoCare.Application.Features.Auth.Interfaces;
+using OdontoCare.Application.Features.Auth.Services;
+using OdontoCare.Application.Features.Consultas.Interfaces;
+using OdontoCare.Application.Features.Consultas.Services;
+using OdontoCare.Application.Features.Estoque.Interfaces;
+using OdontoCare.Application.Features.Estoque.Services;
+using OdontoCare.Application.Features.Financeiro.Interfaces;
+using OdontoCare.Application.Features.Financeiro.Services;
+using OdontoCare.Application.Features.Pacientes.Interfaces;
+using OdontoCare.Application.Features.Pacientes.Services;
+using OdontoCare.Application.Features.Usuarios.Interfaces;
+using OdontoCare.Application.Features.Usuarios.Services;
 using OdontoCare.Infrastructure.Caching;
 using OdontoCare.Infrastructure.Data;
 using OdontoCare.Infrastructure.Repositories;
 using OdontoCare.Infrastructure.Security;
 using OdontoCare.Infrastructure.Services;
+using System.Text;
+using System.Threading.RateLimiting;
 
 namespace OdontoCare.API.Extensions;
 

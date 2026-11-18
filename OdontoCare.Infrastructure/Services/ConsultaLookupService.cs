@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
-using OdontoCare.Application.DTOs;
-using OdontoCare.Application.Interfaces;
+using OdontoCare.Application.Features.Auth.DTOs;
+using OdontoCare.Application.Features.Consultas.DTOs;
+using OdontoCare.Application.Features.Consultas.Interfaces;
 using OdontoCare.Infrastructure.Data;
 
 namespace OdontoCare.Infrastructure.Services;
