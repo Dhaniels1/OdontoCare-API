@@ -1,0 +1,33 @@
+name: Refatoracao Feature-Based (temporaria)
+on:
+  push:
+    branches:
+      - refactor/clean-architecture-feature-based
+permissions:
+  contents: write
+jobs:
+  reorganizar-validar:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+      - name: Reorganizar namespaces e pastas
+        run: python3 tools/_refactor_feature_once.py
+      - name: Compilar solucao completa
+        run: dotnet build OdontoCare.slnx -c Release
+      - name: Verificar Clean Architecture e tipo por arquivo
+        run: pwsh ./tools/verificar_arquitetura.ps1
+      - name: Executar regressao de cache
+        run: dotnet run --no-build -c Release --project tools/CacheRegression
+      - name: Publicar somente se todos os checks passaram
+        run: |
+          rm -f tools/_refactor_feature_once.py .github/workflows/refactor-feature-once.yml
+          git add -A
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git commit -m "refactor: reorganizar Clean Architecture por funcionalidades"
+          git push origin HEAD:refactor/clean-architecture-feature-based
